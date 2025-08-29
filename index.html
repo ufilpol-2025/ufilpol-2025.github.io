@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mój Harmonogram Zajęć</title>
+  <!-- Bootstrap CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <!-- Google Fonts - Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- jsPDF and html2canvas CDN for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" xintegrity="sha512-BNaRQnYJJoOoTXfzshSLSopTn4hvgTqizL0NiFit3DFYmFCaeGaSFuC9tmHVyDNxOfPChYXgMrierU4KwXkHtQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" xintegrity="sha512-EoHragS+WiaTghZGhMsQhS4sFJGtXA/8nJME1uY/x+tpzRBMH0Kz6H6HhZcK2fJ6B/W3/C4D1/zQd+tF6M5A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f3f4f6;
+      height: 100vh; /* Ensures body takes full viewport height */
+      overflow-y: auto; /* Allows scrolling if content exceeds viewport height */
+      padding: 0;
+    }
+    * {
+      border-radius: 0.5rem;
+    }
+    .schedule-item {
+      position: relative;
+      padding: 0.75rem;
+      border-left: 4px solid;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+      transition: all 0.2s ease-in-out;
+      background-color: white;
+      font-size: 0.875rem;
+      z-index: 1;
+      box-sizing: border-box;
+      margin-bottom: 0.75rem;
+      width: calc(100% - 1rem);
+      left: 0.5rem;
+    }
+    .schedule-item h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    .schedule-item p {
+      font-size: 0.75rem;
+      color: #4b5563;
+      line-height: 1.2;
+    }
+    .schedule-grid-container {
+      display: grid; /* Używamy grid dla elastyczności */
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      min-height: 300px;
+      overflow-y: visible;
+      padding-bottom: 0.5rem;
+      flex-grow: 1;
+    }
+    .day-column {
+      position: relative;
+      background-color: #f9fafb;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+    }
+    .timeline-container {
+        position: relative;
+        flex-grow: 1;
+        min-height: 400px;
+        overflow-y: auto;
+        padding-top: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    /* Główne kontenery aplikacji */
+    .app-container {
+      max-width: 100%;
+      height: auto;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+    }
+
+    /* Message box styling (dostosowane do Bootstrapa) */
+    #message-box {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.75rem 1rem;
+      background-color: #4CAF50; /* Domyślny zielony */
+      color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+      font-size: 0.875rem;
+    }
+    #message-box.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    #message-box.error {
+      background-color: #f44336; /* Czerwony dla błędów */
+    }
+
+    /* Modal styling (dostosowane do Bootstrapa) */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+    }
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal-content {
+      background-color: white;
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+      max-width: 90%;
+      width: 400px;
+    }
+    .modal-content h3 {
+      font-size: 1.5rem;
+    }
+    .modal-content p {
+      font-size: 0.875rem;
+    }
+    .modal-content button {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+
+    /* Dodatkowa responsywność dla siatki na mniejszych ekranach */
+    @media (max-width: 768px) {
+      .schedule-grid-container {
+        grid-template-columns: 1fr; /* Pojedyncza kolumna na małych ekranach */
+        height: auto;
+      }
+      .app-container {
+        padding: 0.5rem;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+      h2 {
+        font-size: 1.75rem;
+      }
+    }
+
+    /* --- Stylizacja tylko dla dostępnych zajęć --- */
+    #available-schedule-display .schedule-item {
+      background-color: #e0f2f7; /* jasny niebieski, od razu odróżnia */
+      border: 2px solid #0d6efd; /* wyraźniejsza ramka Bootstrap primary */
+      box-shadow: 0 3px 6px rgba(13, 110, 253, 0.2);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    #available-schedule-display .schedule-item:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 8px 16px rgba(13, 110, 253, 0.3);
+      z-index: 20;
+    }
+
+    #available-schedule-display h4 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #052c65; /* ciemnoniebieski */
+    }
+
+    #available-schedule-display p {
+      font-size: 0.8rem;
+      color: #343a40;
+    }
+  </style>
+</head>
+<body class="p-4">
+  <div class="container-fluid bg-white shadow rounded-3 p-4 p-lg-5 app-container">
+    <h1 class="text-center text-dark mb-4 fs-2 fw-bold">Mój Harmonogram Zajęć</h1>
+
+    <!-- Message Box -->
+    <div id="message-box" class="message-box"></div>
+
+    <!-- Conflict Modal -->
+    <div id="conflict-modal" class="modal-overlay">
+      <div class="modal-content">
+        <h3 class="modal-title fs-4 fw-bold text-dark mb-3">Konflikt w Harmonogramie!</h3>
+        <p class="text-secondary mb-3">Zajęcia <span id="current-conflict-title" class="fw-semibold"></span> kolidują z <span id="new-conflict-title" class="fw-semibold"></span>.</p>
+        <p class="text-secondary mb-4">Czy chcesz zastąpić istniejące zajęcia nowymi?</p>
+        <div class="d-flex justify-content-end gap-2">
+          <button id="modal-cancel" class="btn btn-secondary btn-sm">Anuluj</button>
+          <button id="modal-replace" class="btn btn-danger btn-sm">Zastąp</button>
+        </div>
+      </div>
+    </div>
+
+    <hr class="my-4 border-secondary">
+
+    <h2 class="text-center text-dark mb-4 fs-3 fw-bold">Mój Plan Zajęć</h2>
+    <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+      <button id="generate-html-button" class="btn btn-success btn-sm shadow rounded-pill">Generuj HTML Plan</button>
+      <button id="generate-pdf-button" class="btn btn-info btn-sm shadow rounded-pill text-white">Generuj PDF Plan</button> <!-- Nowy przycisk -->
+      <button id="clear-my-plan-button" class="btn btn-warning btn-sm shadow rounded-pill">Wyczyść Mój Plan</button>
+    </div>
+
+    <div id="my-schedule-display" class="schedule-grid-container mb-4">
+      <!-- My selected schedules will be rendered here -->
+    </div>
+
+    <hr class="my-4 border-secondary">
+
+    <h2 class="text-center text-dark mb-4 fs-3 fw-bold">Dostępne Zajęcia</h2>
+    <div id="available-schedule-display" class="schedule-grid-container">
+      <!-- All available schedules will be rendered here by JavaScript -->
+    </div>
+  </div>
+
+  <script>
+    // Inicjalizacja biblioteki jsPDF (dla generowania PDF)
+    const { jsPDF } = window.jspdf;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const availableScheduleDisplay = document.getElementById('available-schedule-display');
+      const myScheduleDisplay = document.getElementById('my-schedule-display');
+      const messageBox = document.getElementById('message-box');
+      const conflictModal = document.getElementById('conflict-modal');
+      const modalCancelButton = document.getElementById('modal-cancel');
+      const modalReplaceButton = document.getElementById('modal-replace');
+      const currentConflictTitle = document.getElementById('current-conflict-title');
+      const newConflictTitle = document.getElementById('new-conflict-title');
+
+      const generateHtmlButton = document.getElementById('generate-html-button');
+      const generatePdfButton = document.getElementById('generate-pdf-button'); // Nowy przycisk
+      const clearMyPlanButton = document.getElementById('clear-my-plan-button');
+
+
+      let availableSchedules = [];
+      let mySchedules = [];
+      let pendingConflictSchedule = null; // Stores the schedule that caused a conflict
+
+      // Usunięto Sobotę i Niedzielę
+      const daysOfWeek = ['Wtorek', 'Środa', 'Czwartek', 'Piątek']; // Zmieniona kolejność dni
+
+      // --- Utility Functions ---
+      function showMessage(message, type) {
+        messageBox.textContent = message;
+        messageBox.className = `message-box show ${type}`; // Użyto szablonu literału
+        setTimeout(() => {
+          messageBox.classList.remove('show');
+        }, 3000);
+      }
+
+      function timeToMinutes(timeString) {
+          const [hours, minutes] = timeString.split(':').map(Number);
+          return hours * 60 + minutes;
+      }
+
+      function checkConflict(newSchedule, targetSchedules) {
+          const newStart = timeToMinutes(newSchedule.time);
+          const newEnd = timeToMinutes(newSchedule.endTime);
+
+          // Sprawdzenie, czy przedmiot o tym samym tytule już istnieje w planie
+          const isDuplicate = targetSchedules.some(s => s.title === newSchedule.title);
+          if (isDuplicate) {
+              showMessage(`Przedmiot "${newSchedule.title}" już znajduje się w Twoim planie!`, 'error');
+              return true; // Zwróć true, aby zasygnalizować konflikt (duplikat)
+          }
+
+          // Sprawdzenie, czy przekroczono limit 7 ćwiczeń
+          if (targetSchedules.length >= 7) {
+              showMessage('Nie możesz dodać więcej niż 7 ćwiczeń w tygodniu!', 'error');
+              return true; // Zwróć true, aby zasygnalizować konflikt (limit)
+          }
+
+          for (const existingSchedule of targetSchedules) {
+              if (existingSchedule.day === newSchedule.day) {
+                  const existingStart = timeToMinutes(existingSchedule.time);
+                  const existingEnd = timeToMinutes(existingSchedule.endTime);
+
+                  // Check for overlap
+                  if ((newStart < existingEnd && newEnd > existingStart) ||
+                      (existingStart < newEnd && existingEnd > newStart)) {
+                      return existingSchedule; // Return the conflicting schedule
+                  }
+              }
+          }
+          return null; // No conflict
+      }
+
+      // --- Data Management (LocalStorage) ---
+      function saveAvailableSchedules() {
+        localStorage.setItem('availableSchedules', JSON.stringify(availableSchedules));
+      }
+
+      function loadAvailableSchedules() {
+        const storedSchedules = localStorage.getItem('availableSchedules');
+        if (storedSchedules) {
+          availableSchedules = JSON.parse(storedSchedules);
+        } else {
+          // Inicjalizacja z przykładowymi danymi, jeśli brak danych w localStorage
+          // UWAGA: Dane są filtrowane, aby zawierały tylko dni robocze
+          availableSchedules = [
+            { id: '1', title: 'Poetyka z analizą dzieła literackiego - Ćwiczenia', day: 'Piątek', time: '08:00', endTime: '09:30', instructor: 'Ewa Szkudlarek', group: 'Grupa 1', color: '#B0E0E6' },
+            { id: '2', title: 'Poetyka z analizą dzieła literackiego - Ćwiczenia', day: 'Wtorek', time: '11:30', endTime: '13:00', instructor: 'Ewa Szkudlarek', group: 'Grupa 2', color: '#B0E0E6' },
+            { id: '3', title: 'Poetyka z analizą dzieła literackiego - Ćwiczenia', day: 'Piątek', time: '09:45', endTime: '11:15', instructor: 'Agnieszka Rydz', group: 'Grupa 3', color: '#B0E0E6' },
+            { id: '4', title: 'Poetyka z analizą dzieła literackiego - Ćwiczenia', day: 'Środa', time: '13:15', endTime: '14:45', instructor: 'Joanna Maleszyńska', group: 'Grupa 4', color: '#B0E0E6' },
+            { id: '5', title: 'Poetyka z analizą dzieła literackiego - Ćwiczenia', day: 'Czwartek', time: '09:45', endTime: '11:15', instructor: 'Jacek Nowakowski', group: 'Grupa 5', color: '#B0E0E6' },
+            { id: '6', title: 'Poetyka z analizą dzieła literackiego - Ćwiczenia', day: 'Wtorek', time: '13:15', endTime: '14:45', instructor: 'Krzysztof Gajda', group: 'Grupa 6', color: '#B0E0E6' },
+            { id: '7', title: 'Poetyka z analizą dzieła literackiego - Ćwiczenia', day: 'Czwartek', time: '17:00', endTime: '18:30', instructor: 'Magdalena Bednarek', group: 'Grupa 7', color: '#B0E0E6' },
+            { id: '8', title: 'Poetyka z analizą dzieła literackiego - Ćwiczenia', day: 'Czwartek', time: '08:00', endTime: '09:30', instructor: 'Ewelina Bulewicz-Rewers', group: 'Grupa 8', color: '#B0E0E6' },
+
+            { id: '9', title: 'Warsztat polonisty - pisanie - Ćwiczenia', day: 'Wtorek', time: '13:30', endTime: '15:00', instructor: 'Katarzyna Czarnecka', group: 'Grupa 1', color: '#90EE90' },
+            { id: '10', title: 'Warsztat polonisty - pisanie - Ćwiczenia', day: 'Środa', time: '15:15', endTime: '16:45', instructor: 'Katarzyna Czarnecka', group: 'Grupa 2', color: '#90EE90' },
+            { id: '11', title: 'Warsztat polonisty - pisanie - Ćwiczenia', day: 'Wtorek', time: '11:30', endTime: '13:00', instructor: 'Jarosław Liberek', group: 'Grupa 3', color: '#90EE90' },
+            { id: '12', title: 'Warsztat polonisty - pisanie - Ćwiczenia', day: 'Środa', time: '15:15', endTime: '16:45', instructor: 'Jarosław Liberek', group: 'Grupa 4', color: '#90EE90' },
+            { id: '13', title: 'Warsztat polonisty - pisanie - Ćwiczenia', day: 'Wtorek', time: '09:45', endTime: '11:15', instructor: 'Monika Błaszczak-Stachowiak', group: 'Grupa 5', color: '#90EE90' },
+            { id: '14', title: 'Warsztat polonisty - pisanie - Ćwiczenia', day: 'Wtorek', time: '15:15', endTime: '16:45', instructor: 'Dorota Masłej', group: 'Grupa 6', color: '#90EE90' },
+            { id: '15', title: 'Warsztat polonisty - pisanie - Ćwiczenia', day: 'Wtorek', time: '17:00', endTime: '18:30', instructor: 'Aleksandra Sikorska-Krystek', group: 'Grupa 7', color: '#90EE90' },
+            { id: '16', title: 'Warsztat polonisty - pisanie - Ćwiczenia', day: 'Wtorek', time: '08:00', endTime: '09:30', instructor: 'Jagoda Kurnikowska', group: 'Grupa 8', color: '#90EE90' },
+
+            { id: '17', title: 'Język łaciński z elementami kultury antycznej - Ćwiczenia', day: 'Piątek', time: '11:30', endTime: '13:00', instructor: 'Monika Szczot', group: 'Grupa 1', color: '#FFB6C1' },
+            { id: '18', title: 'Język łaciński z elementami kultury antycznej - Ćwiczenia', day: 'Piątek', time: '13:30', endTime: '15:00', instructor: 'Monika Szczot', group: 'Grupa 2', color: '#FFB6C1' },
+            { id: '19', title: 'Język łaciński z elementami kultury antycznej - Ćwiczenia', day: 'Piątek', time: '09:45', endTime: '11:15', instructor: 'Konrad Dominas', group: 'Grupa 3', color: '#FFB6C1' },
+            { id: '20', title: 'Język łaciński z elementami kultury antycznej - Ćwiczenia', day: 'Czwartek', time: '08:00', endTime: '09:30', instructor: 'Katarzyna Kaniecka-Juszczak', group: 'Grupa 4', color: '#FFB6C1' },
+            { id: '21', title: 'Język łaciński z elementami kultury antycznej - Ćwiczenia', day: 'Czwartek', time: '09:45', endTime: '11:15', instructor: 'Katarzyna Kaniecka-Juszczak', group: 'Grupa 5', color: '#FFB6C1' },
+            { id: '22', title: 'Język łaciński z elementami kultury antycznej - Ćwiczenia', day: 'Czwartek', time: '11:30', endTime: '13:00', instructor: 'Katarzyna Kaniecka-Juszczak', group: 'Grupa 6', color: '#FFB6C1' },
+            { id: '23', title: 'Język łaciński z elementami kultury antycznej - Ćwiczenia', day: 'Czwartek', time: '18:45', endTime: '20:15', instructor: 'Katarzyna Kaniecka-Juszczak', group: 'Grupa 7', color: '#FFB6C1' },
+            { id: '24', title: 'Język łaciński z elementami kultury antycznej - Ćwiczenia', day: 'Czwartek', time: '15:15', endTime: '16:45', instructor: 'Marlena Puk', group: 'Grupa 8', color: '#FFB6C1' },
+
+            { id: '25', title: 'Nauka o współczesnym języku polskim - Ćwiczenia', day: 'Piątek', time: '08:00', endTime: '09:30', instructor: 'Karolina Ruta-Korytowska', group: 'Grupa 1', color: '#D8BFD8' },
+            { id: '26', title: 'Nauka o współczesnym języku polskim - Ćwiczenia', day: 'Piątek', time: '11:30', endTime: '13:00', instructor: 'Karolina Ruta-Korytowska', group: 'Grupa 2', color: '#D8BFD8' },
+            { id: '27', title: 'Nauka o współczesnym języku polskim - Ćwiczenia', day: 'Czwartek', time: '11:30', endTime: '13:00', instructor: 'Małgorzata Rybka', group: 'Grupa 3', color: '#D8BFD8' },
+            { id: '28', title: 'Nauka o współczesnym języku polskim - Ćwiczenia', day: 'Czwartek', time: '13:30', endTime: '15:00', instructor: 'Małgorzata Rybka', group: 'Grupa 4', color: '#D8BFD8' },
+            { id: '29', title: 'Nauka o współczesnym języku polskim - Ćwiczenia', day: 'Czwartek', time: '09:45', endTime: '11:15', instructor: 'Marta Wrześniewska-Pietrzak', group: 'Grupa 5', color: '#D8BFD8' },
+            { id: '30', title: 'Nauka o współczesnym języku polskim - Ćwiczenia', day: 'Piątek', time: '09:45', endTime: '11:15', instructor: 'Ewa Kaptur', group: 'Grupa 6', color: '#D8BFD8' },
+            { id: '31', title: 'Nauka o współczesnym języku polskim - Ćwiczenia', day: 'Czwartek', time: '17:00', endTime: '18:30', instructor: 'Alicja Przybylska', group: 'Grupa 7', color: '#D8BFD8' },
+            { id: '32', title: 'Nauka o współczesnym języku polskim - Ćwiczenia', day: 'Czwartek', time: '08:00', endTime: '09:30', instructor: 'Magdalena Socha', group: 'Grupa 8', color: '#D8BFD8' },
+
+            { id: '33', title: 'Nauki pomocnicze - Ćwiczenia', day: 'Środa', time: '08:00', endTime: '09:30', instructor: 'Olga Ziółkowska', group: 'Grupa 1', color: '#FFFACD' },
+            { id: '34', title: 'Nauki pomocnicze - Ćwiczenia', day: 'Środa', time: '09:45', endTime: '11:15', instructor: 'Olga Ziółkowska', group: 'Grupa 2', color: '#FFFACD' },
+            { id: '35', title: 'Nauki pomocnicze - Ćwiczenia', day: 'Środa', time: '11:30', endTime: '13:00', instructor: 'Olga Ziółkowska', group: 'Grupa 3', color: '#FFFACD' },
+            { id: '36', title: 'Nauki pomocnicze - Ćwiczenia', day: 'Wtorek', time: '13:30', endTime: '15:00', instructor: 'Marek Osiewicz', group: 'Grupa 4', color: '#FFFACD' },
+            { id: '37', title: 'Nauki pomocnicze - Ćwiczenia', day: 'Wtorek', time: '15:15', endTime: '16:45', instructor: 'Marek Osiewicz', group: 'Grupa 5', color: '#FFFACD' },
+            { id: '38', title: 'Nauki pomocnicze - Ćwiczenia', day: 'Wtorek', time: '11:30', endTime: '13:00', instructor: 'Katarzyna Krzak-Weiss', group: 'Grupa 6', color: '#FFFACD' },
+            { id: '39', title: 'Nauki pomocnicze - Ćwiczenia', day: 'Wtorek', time: '08:00', endTime: '09:30', instructor: 'N/A', group: 'Grupa 7', color: '#FFFACD' }, // Brak prowadzącego w danych
+            { id: '40', title: 'Nauki pomocnicze - Ćwiczenia', day: 'Wtorek', time: '09:45', endTime: '11:15', instructor: 'N/A', group: 'Grupa 8', color: '#FFFACD' }, // Brak prowadzącego w danych
+
+            { id: '41', title: 'Mówienie - warsztat polonisty - Ćwiczenia', day: 'Wtorek', time: '11:30', endTime: '13:00', instructor: 'Joanna Smól', group: 'Grupa 1', color: '#E6E6FA' },
+            { id: '42', title: 'Mówienie - warsztat polonisty - Ćwiczenia', day: 'Wtorek', time: '13:30', endTime: '15:00', instructor: 'Joanna Smól', group: 'Grupa 2', color: '#E6E6FA' },
+            { id: '43', title: 'Mówienie - warsztat polonisty - Ćwiczenia', day: 'Wtorek', time: '15:15', endTime: '16:45', instructor: 'Justyna Kobus', group: 'Grupa 3', color: '#E6E6FA' },
+            { id: '44', title: 'Mówienie - warsztat polonisty - Ćwiczenia', day: 'Środa', time: '15:15', endTime: '16:45', instructor: 'Justyna Kobus', group: 'Grupa 4', color: '#E6E6FA' },
+            { id: '45', title: 'Mówienie - warsztat polonisty - Ćwiczenia', day: 'Czwartek', time: '17:00', endTime: '18:30', instructor: 'Błażej Osowski', group: 'Grupa 5', color: '#E6E6FA' },
+            { id: '46', title: 'Mówienie - warsztat polonisty - Ćwiczenia', day: 'Środa', time: '15:15', endTime: '16:45', instructor: 'Ewa Kaptur', group: 'Grupa 6', color: '#E6E6FA' },
+            { id: '47', title: 'Mówienie - warsztat polonisty - Ćwiczenia', day: 'Wtorek', time: '09:45', endTime: '11:15', instructor: 'Eliza Grzelak', group: 'Grupa 7', color: '#E6E6FA' },
+            { id: '48', title: 'Mówienie - warsztat polonisty - Ćwiczenia', day: 'Wtorek', time: '08:00', endTime: '09:30', instructor: 'Przemysław Raczyk', group: 'Grupa 8', color: '#E6E6FA' },
+
+            { id: '49', title: 'Historia literatury staropolskiej i oświecenia - Ćwiczenia', day: 'Czwartek', time: '11:30', endTime: '13:00', instructor: 'Grzegorz Raubo', group: 'Grupa 1', color: '#ADD8E6' },
+            { id: '50', title: 'Historia literatury staropolskiej i oświecenia - Ćwiczenia', day: 'Czwartek', time: '13:30', endTime: '15:00', instructor: 'Grzegorz Raubo', group: 'Grupa 2', color: '#ADD8E6' },
+            { id: '51', title: 'Historia literatury staropolskiej i oświecenia - Ćwiczenia', day: 'Piątek', time: '09:45', endTime: '11:15', instructor: 'Leszek Teusz', group: 'Grupa 3', color: '#ADD8E6' },
+            { id: '52', title: 'Historia literatury staropolskiej i oświecenia - Ćwiczenia', day: 'Piątek', time: '11:30', endTime: '13:00', instructor: 'Leszek Teusz', group: 'Grupa 4', color: '#ADD8E6' },
+            { id: '53', title: 'Historia literatury staropolskiej i oświecenia - Ćwiczenia', day: 'Czwartek', time: '17:00', endTime: '18:30', instructor: 'Maciej Parkitny', group: 'Grupa 5', color: '#ADD8E6' },
+            { id: '54', title: 'Historia literatury staropolskiej i oświecenia - Ćwiczenia', day: 'Czwartek', time: '18:45', endTime: '20:15', instructor: 'Maciej Parkitny', group: 'Grupa 6', color: '#ADD8E6' },
+            { id: '55', title: 'Historia literatury staropolskiej i oświecenia - Ćwiczenia', day: 'Czwartek', time: '09:45', endTime: '11:15', instructor: 'Katarzyna Meller', group: 'Grupa 7', color: '#ADD8E6' },
+            { id: '56', title: 'Historia literatury staropolskiej i oświecenia - Ćwiczenia', day: 'Czwartek', time: '08:00', endTime: '09:30', instructor: 'Patrycja Bąkowska', group: 'Grupa 8', color: '#ADD8E6' },
+          ];
+        }
+      }
+
+      function saveMySchedules() {
+        localStorage.setItem('mySchedules', JSON.stringify(mySchedules));
+      }
+
+      function loadMySchedules() {
+        const storedMySchedules = localStorage.getItem('mySchedules');
+        if (storedMySchedules) {
+          mySchedules = JSON.parse(storedMySchedules);
+        }
+      }
+
+      // --- Rendering Functions ---
+      function renderSchedules(targetElement, schedulesArray, isMySchedule = false) {
+        targetElement.innerHTML = ''; // Clear previous content
+
+        const sortedSchedules = [...schedulesArray].sort((a, b) => {
+          const dayA = daysOfWeek.indexOf(a.day);
+          const dayB = daysOfWeek.indexOf(b.day);
+          if (dayA !== dayB) return dayA - dayB; // Sort by day
+          return a.time.localeCompare(b.time); // Then by time
+        });
+
+        daysOfWeek.forEach(day => {
+          const daySchedules = sortedSchedules.filter(s => s.day === day);
+          const dayColumn = document.createElement('div');
+          dayColumn.className = 'day-column bg-light p-3 rounded shadow-sm'; // Bootstrap classes
+          dayColumn.innerHTML = `
+            <h3 class="fs-5 fw-bold text-dark mb-2 text-center">${day}</h3> <!-- Bootstrap classes -->
+            <div class="timeline-container" style="min-height: 300px;" id="${targetElement.id}-day-${day}">
+              ${daySchedules.length === 0 ? '<p class="text-secondary text-center position-absolute top-50 start-50 translate-middle">Brak zajęć.</p>' : ''}
+            </div>
+          `;
+          targetElement.appendChild(dayColumn);
+
+          const timelineContainer = dayColumn.querySelector('.timeline-container');
+
+          // Grupowanie zajęć, które mają ten sam czas rozpoczęcia i zakończenia
+          const groupedSchedules = {};
+          daySchedules.forEach(schedule => {
+            const timeKey = `${schedule.time}-${schedule.endTime}`;
+            if (!groupedSchedules[timeKey]) {
+              groupedSchedules[timeKey] = [];
+            }
+            groupedSchedules[timeKey].push(schedule);
+          });
+
+          // Zmieniono logikę renderowania, aby zajęcia były wyświetlane jedno po drugim
+          Object.keys(groupedSchedules).forEach((timeKey, groupIndex) => {
+            const schedulesInGroup = groupedSchedules[timeKey];
+            schedulesInGroup.sort((a, b) => a.id.localeCompare(b.id)); // Sortowanie dla spójności
+
+            schedulesInGroup.forEach((schedule, itemIndex) => {
+                const scheduleItem = document.createElement('div');
+                scheduleItem.id = `schedule-${schedule.id}`;
+                scheduleItem.className = 'schedule-item card d-flex flex-column'; // Bootstrap classes
+                const itemColor = schedule.color || '#cccccc'; // Fallback kolor
+                scheduleItem.style.borderLeftColor = itemColor;
+
+                scheduleItem.innerHTML = `
+                  <h4 class="card-title fw-bold fs-6 text-dark">${schedule.title}</h4>
+                  <p class="card-text text-secondary small">🕒 ${schedule.time} - ${schedule.endTime}</p>
+                  <p class="card-text text-secondary small">👨‍🏫 ${schedule.instructor}</p>
+                  ${schedule.group ? `<p class="card-text text-secondary small">👥 ${schedule.group}</p>` : ''}
+                  <div class="mt-2 d-flex justify-content-end gap-1">
+                    ${isMySchedule
+                      ? `
+                        <button class="edit-my-schedule-button btn btn-warning btn-sm" data-id="${schedule.id}">Edytuj</button>
+                        <button class="remove-my-schedule-button btn btn-danger btn-sm" data-id="${schedule.id}">Usuń</button>
+                      `
+                      : ''}
+                  </div>
+                `;
+                timelineContainer.appendChild(scheduleItem);
+            });
+          });
+        });
+      }
+
+      // --- Event Listener Functions ---
+      function attachAvailableScheduleItemListeners() {
+        document.querySelectorAll('#available-schedule-display .schedule-item').forEach(item => {
+          item.onclick = (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                return;
+            }
+            const id = item.id.replace('schedule-', '');
+            const scheduleToAdd = availableSchedules.find(s => s.id === id);
+
+            if (scheduleToAdd) {
+                const conflictingSchedule = checkConflict(scheduleToAdd, mySchedules);
+                if (conflictingSchedule === true) {
+                    return;
+                } else if (conflictingSchedule) {
+                    currentConflictTitle.textContent = conflictingSchedule.title;
+                    newConflictTitle.textContent = scheduleToAdd.title;
+                    pendingConflictSchedule = scheduleToAdd;
+                    conflictModal.classList.add('show');
+                } else {
+                    mySchedules.push({ ...scheduleToAdd, id: Date.now().toString() + '-' + scheduleToAdd.id });
+                    saveMySchedules();
+                    renderSchedules(myScheduleDisplay, mySchedules, true);
+                    attachMyScheduleItemListeners(); // Przypnij zdarzenia po ponownym renderowaniu
+                    showMessage('Zajęcia dodane do Twojego planu!', 'success');
+                }
+            }
+          };
+        });
+      }
+
+      function attachMyScheduleItemListeners() {
+        // Usuń wszystkie poprzednie słuchacze, aby zapobiec duplikatom
+        document.querySelectorAll('#my-schedule-display .schedule-item').forEach(item => {
+          // Klonuj węzeł, aby usunąć istniejące słuchacze zdarzeń
+          // Jest to bezpieczny sposób na uniknięcie podwójnych słuchaczy
+          const newItem = item.cloneNode(true);
+          item.parentNode.replaceChild(newItem, item);
+        });
+
+        // Edit My Schedule buttons
+        document.querySelectorAll('.edit-my-schedule-button').forEach(button => {
+          button.onclick = (e) => {
+            const id = e.target.dataset.id;
+            const scheduleToEdit = mySchedules.find(s => s.id === id);
+            if (scheduleToEdit) {
+              const newTitle = prompt("Edytuj tytuł:", scheduleToEdit.title);
+              const newInstructor = prompt("Edytuj prowadzącego:", scheduleToEdit.instructor);
+              const newGroup = prompt("Edytuj grupę (opcjonalnie):", scheduleToEdit.group);
+              const newColor = prompt("Edytuj kolor (np. #FF0000):", scheduleToEdit.color);
+
+              if (newTitle !== null && newInstructor !== null) { // Check if user didn't cancel
+                  const updatedSchedule = {
+                      ...scheduleToEdit,
+                      title: newTitle,
+                      instructor: newInstructor,
+                      group: newGroup,
+                      color: newColor || scheduleToEdit.color // Use existing if new is empty
+                  };
+                  mySchedules = mySchedules.map(s => s.id === id ? updatedSchedule : s);
+                  saveMySchedules();
+                  renderSchedules(myScheduleDisplay, mySchedules, true);
+                  attachMyScheduleItemListeners(); // Ponownie przypnij zdarzenia
+                  showMessage('Zajęcia w Twoim planie zaktualizowane pomyślnie!', 'success');
+              } else {
+                  showMessage('Edycja anulowana.', 'info');
+              }
+            }
+          };
+        });
+
+        // Remove from My Schedule buttons
+        document.querySelectorAll('.remove-my-schedule-button').forEach(button => {
+          button.onclick = (e) => {
+            const id = e.target.dataset.id;
+            mySchedules = mySchedules.filter(s => s.id !== id);
+            saveMySchedules();
+            renderSchedules(myScheduleDisplay, mySchedules, true);
+            attachMyScheduleItemListeners(); // Ponownie przypnij zdarzenia
+            showMessage('Zajęcia usunięte z Twojego planu!', 'success');
+          };
+        });
+      }
+
+      // --- Conflict Modal Event Listeners ---
+      modalCancelButton.addEventListener('click', () => {
+        conflictModal.classList.remove('show');
+        pendingConflictSchedule = null;
+      });
+
+      modalReplaceButton.addEventListener('click', () => {
+        if (pendingConflictSchedule) {
+            // Usuń kolidujące zajęcia
+            mySchedules = mySchedules.filter(
+                s => !(s.day === pendingConflictSchedule.day &&
+                        timeToMinutes(s.time) < timeToMinutes(pendingConflictSchedule.endTime) &&
+                        timeToMinutes(s.endTime) > timeToMinutes(pendingConflictSchedule.time))
+            );
+            mySchedules.push({ ...pendingConflictSchedule, id: Date.now().toString() + '-' + pendingConflictSchedule.id }); // Dodaj z nowym unikalnym ID
+            saveMySchedules();
+            renderSchedules(myScheduleDisplay, mySchedules, true);
+            attachMyScheduleItemListeners(); // Ponownie przypnij zdarzenia
+            showMessage('Zajęcia zastąpione w Twoim planie!', 'success');
+        }
+        conflictModal.classList.remove('show');
+        pendingConflictSchedule = null;
+      });
+
+      clearMyPlanButton.addEventListener('click', () => {
+          mySchedules = [];
+          saveMySchedules();
+          renderSchedules(myScheduleDisplay, mySchedules, true);
+          attachMyScheduleItemListeners(); // Ponownie przypnij zdarzenia
+          showMessage('Twój plan zajęć został wyczyszczony!', 'success');
+      });
+
+      // --- Generate HTML Plan Button Event Listener ---
+      generateHtmlButton.addEventListener('click', () => {
+        const fileName = prompt("Podaj nazwę pliku HTML (bez rozszerzenia):", "MojPlanZajec");
+        if (fileName) {
+          const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="pl">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>${fileName}</title>
+              <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+              <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+              <style>
+                body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; padding: 1rem;}
+                * { border-radius: 0.5rem; }
+                .schedule-item {
+                  position: relative;
+                  padding: 0.75rem;
+                  border-left: 4px solid;
+                  margin-bottom: 0.75rem;
+                  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+                  background-color: white;
+                }
+                .schedule-item h4 {
+                  font-size: 1rem;
+                  font-weight: 600;
+                  margin-bottom: 0.25rem;
+                }
+                .schedule-item p {
+                  font-size: 0.75rem;
+                  color: #4b5563;
+                  line-height: 1.2;
+                }
+                .schedule-grid-container {
+                  display: grid;
+                  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                  gap: 1rem;
+                }
+                .day-column {
+                  background-color: #f9fafb;
+                  padding: 1rem;
+                  border-radius: 0.5rem;
+                  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                }
+                .timeline-container {
+                    min-height: 300px;
+                    overflow-y: auto;
+                    padding-top: 0.5rem;
+                    padding-right: 0.5rem;
+                }
+                @media (max-width: 768px) {
+                  .schedule-grid-container {
+                    grid-template-columns: 1fr;
+                  }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container-fluid bg-white shadow rounded-3 p-4 p-lg-5">
+                <h1 class="text-center text-dark mb-4 fs-2 fw-bold">Mój Osobisty Plan Zajęć</h1>
+                <div class="schedule-grid-container">
+                  ${daysOfWeek.map(day => {
+                    const daySchedules = mySchedules.filter(s => s.day === day).sort((a,b) => a.time.localeCompare(b.time));
+                    return `
+                      <div class="day-column bg-light p-3 rounded shadow-sm">
+                        <h3 class="fs-5 fw-bold text-dark mb-2 text-center">${day}</h3>
+                        <div class="timeline-container" style="min-height: 300px;">
+                          ${daySchedules.length === 0 ? '<p class="text-secondary text-center">Brak zajęć.</p>' : ''}
+                          ${daySchedules.map(schedule => {
+                            const itemColor = schedule.color || '#cccccc'; // Fallback kolor
+                            return `
+                            <div style="background-color: ${itemColor}; border-left-color: ${itemColor};" class="schedule-item card d-flex flex-column">
+                              <h4 class="card-title fw-bold fs-6 text-dark">${schedule.title}</h4>
+                              <p class="card-text text-secondary small">🕒 ${schedule.time} - ${schedule.endTime}</p>
+                              <p class="card-text text-secondary small">👨‍🏫 ${schedule.instructor}</p>
+                              ${schedule.group ? `<p class="card-text text-secondary small">👥 ${schedule.group}</p>` : ''}
+                            </div>
+                            `;
+                          }).join('')}
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            </body>
+            </html>
+          `;
+
+          const blob = new Blob([htmlContent], { type: 'text/html' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${fileName}.html`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showMessage(`Plik "${fileName}.html" został wygenerowany!`, 'success');
+        } else {
+          showMessage('Generowanie pliku HTML anulowane.', 'info');
+        }
+      });
+
+      // --- New: Generate PDF Plan Button Event Listener ---
+      generatePdfButton.addEventListener('click', async () => {
+        const fileName = prompt("Podaj nazwę pliku PDF (bez rozszerzenia):", "MojPlanZajec");
+        if (!fileName) {
+          showMessage('Generowanie pliku PDF anulowane.', 'info');
+          return;
+        }
+
+        showMessage('Generuję PDF...', 'info');
+
+        try {
+          // Pobierz element do konwersji na PDF (sekcja "Mój Plan Zajęć")
+          const element = document.getElementById('my-schedule-display');
+          
+          // Upewnij się, że element ma odpowiednią szerokość, aby nie był zbyt rozciągnięty w PDF
+          // Temporarily adjust width for better PDF rendering
+          element.style.width = '100%'; 
+
+          const canvas = await html2canvas(element, {
+            scale: 2, // Zwiększ skalę dla lepszej jakości obrazu w PDF
+            useCORS: true, // Użyj CORS, jeśli masz obrazy z innych domen
+          });
+
+          const imgData = canvas.toDataURL('image/png');
+          const pdf = new jsPDF('p', 'mm', 'a4'); // 'p' for portrait, 'mm' for millimeters, 'a4' for A4 size
+          
+          // Oblicz wymiary obrazu w PDF
+          const imgWidth = 210; // A4 width in mm (approx)
+          const pageHeight = 297; // A4 height in mm (approx)
+          const imgHeight = canvas.height * imgWidth / canvas.width;
+          let heightLeft = imgHeight;
+
+          let position = 0;
+
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+
+          while (heightLeft >= 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+          }
+
+          pdf.save(`${fileName}.pdf`);
+          element.style.width = ''; // Restore original width
+          showMessage(`Plik "${fileName}.pdf" został wygenerowany!`, 'success');
+
+        } catch (error) {
+          console.error("Błąd podczas generowania PDF:", error);
+          showMessage('Wystąpił błąd podczas generowania pliku PDF. Spróbuj ponownie.', 'error');
+        }
+      });
+
+
+      // Initial load and render
+      loadAvailableSchedules();
+      loadMySchedules();
+
+      renderSchedules(availableScheduleDisplay, availableSchedules, false);
+      attachAvailableScheduleItemListeners(); // Przypnij słuchacze do dostępnych zajęć
+
+      renderSchedules(myScheduleDisplay, mySchedules, true);
+      attachMyScheduleItemListeners(); // Przypnij słuchacze do mojego planu
+    });
+  </script>
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>
