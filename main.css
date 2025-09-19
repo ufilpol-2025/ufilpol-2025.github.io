@@ -1,0 +1,260 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f3f4f6;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 0;
+}
+
+* {
+    border-radius: 0.5rem;
+}
+
+.schedule-item {
+    position: relative;
+    padding: 0.75rem;
+    border-left: 4px solid;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease-in-out;
+    background-color: white;
+    font-size: 0.875rem;
+    z-index: 1;
+    box-sizing: border-box;
+    margin-bottom: 0.75rem;
+    width: calc(100% - 1rem);
+    left: 0.5rem;
+}
+
+.schedule-item h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.schedule-item p {
+    font-size: 0.75rem;
+    color: #4b5563;
+    line-height: 1.2;
+}
+
+.schedule-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    min-height: 300px;
+    overflow-y: visible;
+    padding-bottom: 0.5rem;
+    flex-grow: 1;
+}
+
+.day-column {
+    position: relative;
+    background-color: #f9fafb;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.timeline-container {
+    position: relative;
+    flex-grow: 1;
+    min-height: 400px;
+    overflow-y: auto;
+    padding-top: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+/* Główne kontenery aplikacji */
+.app-container {
+    max-width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+}
+
+/* Message box styling */
+#message-box {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.75rem 1rem;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+    font-size: 0.875rem;
+}
+
+#message-box.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+#message-box.error {
+    background-color: #f44336;
+}
+
+/* Modal styling */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+    max-width: 90%;
+    width: 400px;
+}
+
+.modal-content h3 {
+    font-size: 1.5rem;
+}
+
+.modal-content p {
+    font-size: 0.875rem;
+}
+
+.modal-content button {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Stylizacja dla dostępnych zajęć */
+#available-schedule-display .schedule-item {
+    background-color: #e0f2f7;
+    border: 2px solid #0d6efd;
+    box-shadow: 0 3px 6px rgba(13, 110, 253, 0.2);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#available-schedule-display .schedule-item:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 16px rgba(13, 110, 253, 0.3);
+    z-index: 20;
+}
+
+#available-schedule-display h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #052c65;
+}
+
+#available-schedule-display p {
+    font-size: 0.8rem;
+    color: #343a40;
+}
+
+/* Styling dla listy lektur */
+.reading-list-item {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    border-left: 3px solid #6c757d;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+    line-height: 1.4;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.reading-list-item strong {
+    color: #343a40;
+}
+
+.reading-list-item small {
+    color: #6c757d;
+    display: block;
+    margin-top: 0.2rem;
+}
+
+.reading-list-header {
+    background-color: #e9ecef;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
+    margin-bottom: 0;
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+.reading-list-collapse {
+    background-color: white;
+    border: 1px solid rgba(0,0,0,.125);
+    border-top: none;
+    border-bottom-left-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
+    padding: 1.25rem;
+}
+
+/* Ukrywanie/pokazywanie sekcji głównej */
+.content-section {
+    transition: opacity 0.3s ease-in-out;
+}
+
+.content-section.d-none {
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.progress-container {
+    height: 20px;
+    background-color: #e9ecef;
+    border-radius: 0.25rem;
+    margin-top: 1rem;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0;
+    background-color: #0d6efd;
+    transition: width 0.3s ease;
+}
+
+/* Responsywność */
+@media (max-width: 768px) {
+    .schedule-grid-container {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+    .app-container {
+        padding: 0.5rem;
+    }
+    h1 {
+        font-size: 2rem;
+    }
+    h2 {
+        font-size: 1.75rem;
+    }
+}

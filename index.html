@@ -1,261 +1,22 @@
+
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mój Harmonogram Zajęć i Listy Lektur</title>
-  <!-- Bootstrap CSS CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-  <!-- Google Fonts - Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- jsPDF and html2canvas CDN for PDF generation -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" xintegrity="sha512-BNaRQnYJJoOoTXfzshSLSopTn4hvgTqizL0NiFit3DFYmFCaeGaSFuC9tmHVyDNxOfPChKwXkHtQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" xintegrity="sha512-EoHragS+WiaTghZGhMsQhS4sFJGtXA/8nJME1uY/x+tpzRBMH0Kz6H6HhZcK2fJ6B/W3/C4D1/zQd+tF6M5A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f3f4f6;
-      height: 100vh;
-      overflow-y: auto;
-      padding: 0;
-    }
-    * {
-      border-radius: 0.5rem;
-    }
-    .schedule-item {
-      position: relative;
-      padding: 0.75rem;
-      border-left: 4px solid;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
-      transition: all 0.2s ease-in-out;
-      background-color: white;
-      font-size: 0.875rem;
-      z-index: 1;
-      box-sizing: border-box;
-      margin-bottom: 0.75rem;
-      width: calc(100% - 1rem);
-      left: 0.5rem;
-    }
-    .schedule-item h4 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-    }
-    .schedule-item p {
-      font-size: 0.75rem;
-      color: #4b5563;
-      line-height: 1.2;
-    }
-    .schedule-grid-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
-      min-height: 300px;
-      overflow-y: visible;
-      padding-bottom: 0.5rem;
-      flex-grow: 1;
-    }
-    .day-column {
-      position: relative;
-      background-color: #f9fafb;
-      padding: 1rem;
-      border-radius: 0.5rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      display: flex;
-      flex-direction: column;
-    }
-    .timeline-container {
-        position: relative;
-        flex-grow: 1;
-        min-height: 400px;
-        overflow-y: auto;
-        padding-top: 0.5rem;
-        padding-right: 0.5rem;
-    }
-
-    /* Główne kontenery aplikacji */
-    .app-container {
-      max-width: 100%;
-      height: auto;
-      display: flex;
-      flex-direction: column;
-      padding: 1rem;
-    }
-
-    /* Message box styling (dostosowane do Bootstrapa) */
-    #message-box {
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
-      padding: 0.75rem 1rem;
-      background-color: #4CAF50;
-      color: white;
-      border-radius: 0.5rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      z-index: 1000;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
-      font-size: 0.875rem;
-    }
-    #message-box.show {
-      opacity: 1;
-      visibility: visible;
-    }
-    #message-box.error {
-      background-color: #f44336;
-    }
-
-    /* Modal styling (dostosowane do Bootstrapa) */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.6);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
-    }
-    .modal-overlay.show {
-      opacity: 1;
-      visibility: visible;
-    }
-    .modal-content {
-      background-color: white;
-      padding: 1.5rem;
-      border-radius: 0.75rem;
-      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
-      max-width: 90%;
-      width: 400px;
-    }
-    .modal-content h3 {
-      font-size: 1.5rem;
-    }
-    .modal-content p {
-      font-size: 0.875rem;
-    }
-    .modal-content button {
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-    }
-
-    /* Dodatkowa responsywność dla siatki na mniejszych ekranach */
-    @media (max-width: 768px) {
-      .schedule-grid-container {
-        grid-template-columns: 1fr;
-        height: auto;
-      }
-      .app-container {
-        padding: 0.5rem;
-      }
-      h1 {
-        font-size: 2rem;
-      }
-      h2 {
-        font-size: 1.75rem;
-      }
-    }
-
-    /* --- Stylizacja tylko dla dostępnych zajęć --- */
-    #available-schedule-display .schedule-item {
-      background-color: #e0f2f7;
-      border: 2px solid #0d6efd;
-      box-shadow: 0 3px 6px rgba(13, 110, 253, 0.2);
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    #available-schedule-display .schedule-item:hover {
-      transform: translateY(-3px) scale(1.02);
-      box-shadow: 0 8px 16px rgba(13, 110, 253, 0.3);
-      z-index: 20;
-    }
-
-    #available-schedule-display h4 {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #052c65;
-    }
-
-    #available-schedule-display p {
-      font-size: 0.8rem;
-      color: #343a40;
-    }
-    /* Styling dla listy lektur */
-    .reading-list-item {
-        margin-bottom: 0.5rem;
-        padding: 0.5rem;
-        border-left: 3px solid #6c757d;
-        background-color: #f8f9fa;
-        border-radius: 0.25rem;
-        line-height: 1.4;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .reading-list-item strong {
-        color: #343a40;
-    }
-    .reading-list-item small {
-        color: #6c757d;
-        display: block;
-        margin-top: 0.2rem;
-    }
-    .reading-list-header {
-      background-color: #e9ecef;
-      padding: 0.75rem 1.25rem;
-      border-bottom: 1px solid rgba(0,0,0,.125);
-      border-top-left-radius: 0.25rem;
-      border-top-right-radius: 0.25rem;
-      margin-bottom: 0;
-      font-weight: 600;
-      font-size: 1.1rem;
-      cursor: pointer;
-    }
-    .reading-list-collapse {
-      background-color: white;
-      border: 1px solid rgba(0,0,0,.125);
-      border-top: none;
-      border-bottom-left-radius: 0.25rem;
-      border-bottom-right-radius: 0.25rem;
-      padding: 1.25rem;
-    }
-    /* Ukrywanie/pokazywanie sekcji głównej */
-    .content-section {
-        transition: opacity 0.3s ease-in-out;
-    }
-    .content-section.d-none {
-        opacity: 0;
-        height: 0;
-        overflow: hidden;
-        pointer-events: none;
-    }
-
-    .progress-container {
-        height: 20px;
-        background-color: #e9ecef;
-        border-radius: 0.25rem;
-        margin-top: 1rem;
-        overflow: hidden;
-    }
-    .progress-bar {
-        height: 100%;
-        width: 0;
-        background-color: #0d6efd;
-        transition: width 0.3s ease;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mój Harmonogram Zajęć i Listy Lektur</title>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- jsPDF and html2canvas CDN for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJJoOoTXfzshSLSopTn4hvgTqizL0NiFit3DFYmFCaeGaSFuC9tmHVyDNxOfPChKwXkHtQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-EoHragS+WiaTghZGhMsQhS4sFJGtXA/8nJME1uY/x+tpzRBMH0Kz6H6HhZcK2fJ6B/W3/C4D1/zQd+tF6M5A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Własne style CSS -->
+    <link rel="stylesheet" href="main.css">
 </head>
 <body class="p-4">
-  <div class="container-fluid bg-white shadow rounded-3 p-4 p-lg-5 app-container">
+<div class="container-fluid bg-white shadow rounded-3 p-4 p-lg-5 app-container">
     <h1 class="text-center text-dark mb-4 fs-2 fw-bold">Mój Harmonogram Zajęć i Listy Lektur</h1>
 
     <!-- Message Box -->
@@ -263,45 +24,45 @@
 
     <!-- Conflict Modal -->
     <div id="conflict-modal" class="modal-overlay">
-      <div class="modal-content">
-        <h3 class="modal-title fs-4 fw-bold text-dark mb-3">Konflikt w Harmonogramie!</h3>
-        <p class="text-secondary mb-3">Zajęcia <span id="current-conflict-title" class="fw-semibold"></span> kolidują z <span id="new-conflict-title" class="fw-semibold"></span>.</p>
-        <p class="text-secondary mb-4">Czy chcesz zastąpić istniejące zajęcia nowymi?</p>
-        <div class="d-flex justify-content-end gap-2">
-          <button id="modal-cancel" class="btn btn-secondary btn-sm">Anuluj</button>
-          <button id="modal-replace" class="btn btn-danger btn-sm">Zastąp</button>
+        <div class="modal-content">
+            <h3 class="modal-title fs-4 fw-bold text-dark mb-3">Konflikt w Harmonogramie!</h3>
+            <p class="text-secondary mb-3">Zajęcia <span id="current-conflict-title" class="fw-semibold"></span> kolidują z <span id="new-conflict-title" class="fw-semibold"></span>.</p>
+            <p class="text-secondary mb-4">Czy chcesz zastąpić istniejące zajęcia nowymi?</p>
+            <div class="d-flex justify-content-end gap-2">
+                <button id="modal-cancel" class="btn btn-secondary btn-sm">Anuluj</button>
+                <button id="modal-replace" class="btn btn-danger btn-sm">Zastąp</button>
+            </div>
         </div>
-      </div>
     </div>
 
     <hr class="my-4 border-secondary">
 
     <!-- Toggle Buttons -->
     <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
-      <button id="show-schedule-button" class="btn btn-primary btn-sm shadow rounded-pill">Pokaż Mój Plan Zajęć</button>
-      <button id="show-reading-list-button" class="btn btn-secondary btn-sm shadow rounded-pill">Pokaż Listy Lektur</button>
-      <button id="show-generator-button" class="btn btn-secondary btn-sm shadow rounded-pill">Pokaż Generator Planów</button>
+        <button id="show-schedule-button" class="btn btn-primary btn-sm shadow rounded-pill">Pokaż Mój Plan Zajęć</button>
+        <button id="show-reading-list-button" class="btn btn-secondary btn-sm shadow rounded-pill">Pokaż Listy Lektur</button>
+        <button id="show-generator-button" class="btn btn-secondary btn-sm shadow rounded-pill">Pokaż Generator Planów</button>
     </div>
 
     <!-- My Schedule Section -->
     <div id="my-schedule-section" class="content-section">
-      <h2 class="text-center text-dark mb-4 fs-3 fw-bold">Mój Plan Zajęć</h2>
-      <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
-        <button id="generate-html-button" class="btn btn-success btn-sm shadow rounded-pill">Generuj HTML Plan</button>
-        <button id="generate-pdf-button" class="btn btn-info btn-sm shadow rounded-pill text-white">Generuj PDF Plan</button>
-        <button id="clear-my-plan-button" class="btn btn-warning btn-sm shadow rounded-pill">Wyczyść Mój Plan</button>
-      </div>
+        <h2 class="text-center text-dark mb-4 fs-3 fw-bold">Mój Plan Zajęć</h2>
+        <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+            <button id="generate-html-button" class="btn btn-success btn-sm shadow rounded-pill">Generuj HTML Plan</button>
+            <button id="generate-pdf-button" class="btn btn-info btn-sm shadow rounded-pill text-white">Generuj PDF Plan</button>
+            <button id="clear-my-plan-button" class="btn btn-warning btn-sm shadow rounded-pill">Wyczyść Mój Plan</button>
+        </div>
 
-      <div id="my-schedule-display" class="schedule-grid-container mb-4">
-        <!-- My selected schedules will be rendered here -->
-      </div>
+        <div id="my-schedule-display" class="schedule-grid-container mb-4">
+            <!-- My selected schedules will be rendered here -->
+        </div>
 
-      <hr class="my-4 border-secondary">
+        <hr class="my-4 border-secondary">
 
-      <h2 class="text-center text-dark mb-4 fs-3 fw-bold">Dostępne Zajęcia</h2>
-      <div id="available-schedule-display" class="schedule-grid-container">
-        <!-- All available schedules will be rendered here by JavaScript -->
-      </div>
+        <h2 class="text-center text-dark mb-4 fs-3 fw-bold">Dostępne Zajęcia</h2>
+        <div id="available-schedule-display" class="schedule-grid-container">
+            <!-- All available schedules will be rendered here by JavaScript -->
+        </div>
     </div>
 
     <!-- Reading List Section -->
@@ -326,24 +87,34 @@
                             <a href="https://wolnelektury.pl/katalog/lektura/homer-iliada.html" target="_blank" class="btn btn-sm btn-outline-info">Pobierz</a>
                         </div>
                         <div class="reading-list-item">
-                            <strong>PLATON: Uczta</strong><br>
-                            <small>przeł. W. Witwicki.</small>
+                            <div>
+                                <strong>PLATON: Uczta</strong><br>
+                                <small>przeł. W. Witwicki.</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>WERGILIUSZ: Eneida</strong><br>
-                            <small>przeł. T. Karyłowski, oprac. S. Stabryła, BN II 29 (obowiązują ks. 1-3; 6).</small>
+                            <div>
+                                <strong>WERGILIUSZ: Eneida</strong><br>
+                                <small>przeł. T. Karyłowski, oprac. S. Stabryła, BN II 29 (obowiązują ks. 1-3; 6).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>TRZY POETYKI KLASYCZNE</strong><br>
-                            <small>oprac. T. Sinko, BN II 57 (obowiązuje List do Pizonów Horacego).</small>
+                            <div>
+                                <strong>TRZY POETYKI KLASYCZNE</strong><br>
+                                <small>oprac. T. Sinko, BN II 57 (obowiązuje List do Pizonów Horacego).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>HORACY: Ody i epody</strong><br>
-                            <small>w: Dzieła wszystkie, oprac. O. Jurewicz; lub: przeł. A. Lam, Warszawa 2008 (obowiązuje wybór, w tym ody I 23; II 7; II 20; III 1; III 24; III 30; IV 7 oraz epody 2; 8; 16).</small>
+                            <div>
+                                <strong>HORACY: Ody i epody</strong><br>
+                                <small>w: Dzieła wszystkie, oprac. O. Jurewicz; lub: przeł. A. Lam, Warszawa 2008 (obowiązuje wybór, w tym ody I 23; II 7; II 20; III 1; III 24; III 30; IV 7 oraz epody 2; 8; 16).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>OWIDIUSZ: Metamorfozy</strong><br>
-                            <small>przeł. A. Kamieńska, S. Stabryła, oprac. S. Stabryła, BN II 76 (obowiązują ks. 1-2 oraz dwie wybrane).</small>
+                            <div>
+                                <strong>OWIDIUSZ: Metamorfozy</strong><br>
+                                <small>przeł. A. Kamieńska, S. Stabryła, oprac. S. Stabryła, BN II 76 (obowiązują ks. 1-2 oraz dwie wybrane).</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -359,12 +130,16 @@
                 <div id="collapseHebraica" class="accordion-collapse collapse" aria-labelledby="headingHebraica" data-bs-parent="#readingListAccordion">
                     <div class="accordion-body">
                         <div class="reading-list-item">
-                            <strong>PISMO ŚWIĘTE STAREGO I NOWEGO TESTAMENTU</strong><br>
-                            <small>przeł. J. Wujek; lub: Biblia Tyniecka, Kraków 1966 i wyd. nast. (obowiązują księgi: Genezis (Rodzaju); Lamentacje Jeremiasza; Pieśń nad Pieśniami; Ewangelia wg św. Łukasza; Ewangelia wg św. Jana; Apokalipsa św. Jana).</small>
+                            <div>
+                                <strong>PISMO ŚWIĘTE STAREGO I NOWEGO TESTAMENTU</strong><br>
+                                <small>przeł. J. Wujek; lub: Biblia Tyniecka, Kraków 1966 i wyd. nast. (obowiązują księgi: Genezis (Rodzaju); Lamentacje Jeremiasza; Pieśń nad Pieśniami; Ewangelia wg św. Łukasza; Ewangelia wg św. Jana; Apokalipsa św. Jana).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>ŚW. AUGUSTYN: Wyznania</strong><br>
-                            <small>tłum. Z. Kubiak, Warszawa 1994 (wybór).</small>
+                            <div>
+                                <strong>ŚW. AUGUSTYN: Wyznania</strong><br>
+                                <small>tłum. Z. Kubiak, Warszawa 1994 (wybór).</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -382,34 +157,48 @@
                         <h4>TEKSTY</h4>
                         <h5>LITERATURA POLSKA</h5>
                         <div class="reading-list-item">
-                            <strong>ŚREDNIOWIECZNA PROZA POLSKA</strong><br>
-                            <small>oprac. S. Vrtel-Wierczyński, BN I 68 (obowiązują: Kazania świętokrzyskie; Rozmyślanie przemyskie).</small>
+                            <div>
+                                <strong>ŚREDNIOWIECZNA PROZA POLSKA</strong><br>
+                                <small>oprac. S. Vrtel-Wierczyński, BN I 68 (obowiązują: Kazania świętokrzyskie; Rozmyślanie przemyskie).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>ŚREDNIOWIECZNA PIEŚŃ RELIGIJNA POLSKA</strong><br>
-                            <small>oprac. M. Korolko, wyd. 2 zmien., BN I 65 (obowiązują: Bogurodzica; Posłuchajcie bracia miła; pieśni Władysława z Gielniowa; Chwała Tobie, Gospodynie).</small>
+                            <div>
+                                <strong>ŚREDNIOWIECZNA PIEŚŃ RELIGIJNA POLSKA</strong><br>
+                                <small>oprac. M. Korolko, wyd. 2 zmien., BN I 65 (obowiązują: Bogurodzica; Posłuchajcie bracia miła; pieśni Władysława z Gielniowa; Chwała Tobie, Gospodynie).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>POLSKA POEZJA ŚWIECKA XV WIEKU</strong><br>
-                            <small>oprac. M. Włodarski, BN I 60 (obowiązują: wiersz Słoty O chlebowym stole; Satyra na chytrych kmieciów; Pieśń o Wiklefie; Rozmowa Mistrza Polikarpa ze Śmiercią; Skarga umierającego; Cantilena inhonesta).</small>
+                            <div>
+                                <strong>POLSKA POEZJA ŚWIECKA XV WIEKU</strong><br>
+                                <small>oprac. M. Włodarski, BN I 60 (obowiązują: wiersz Słoty O chlebowym stole; Satyra na chytrych kmieciów; Pieśń o Wiklefie; Rozmowa Mistrza Polikarpa ze Śmiercią; Skarga umierającego; Cantilena inhonesta).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>ANONIM TZW. GALL: Kronika polska</strong><br>
-                            <small>przeł. R. Grodecki, oprac. M. Plezia, BN I 59.</small>
+                            <div>
+                                <strong>ANONIM TZW. GALL: Kronika polska</strong><br>
+                                <small>przeł. R. Grodecki, oprac. M. Plezia, BN I 59.</small>
+                            </div>
                         </div>
                         <h5>LITERATURA OBCA</h5>
                         <div class="reading-list-item">
-                            <strong>DANTE ALIGHIERI: Boska komedia (Wybór)</strong><br>
-                            <small>przeł. E. Porębowicz, oprac. K. Morawski, BN II 187; lub: Boska komedia, przeł. A. Kuciak (obowiązuje cz. 1: Piekło).</small>
+                            <div>
+                                <strong>DANTE ALIGHIERI: Boska komedia (Wybór)</strong><br>
+                                <small>przeł. E. Porębowicz, oprac. K. Morawski, BN II 187; lub: Boska komedia, przeł. A. Kuciak (obowiązuje cz. 1: Piekło).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>ARCYDZIEŁA FRANCUSKIEGO ŚREDNIOWIECZA</strong><br>
-                            <small>wybór M. Żurowski, oprac. Z. Czerny, Warszawa 1968 (obowiązują fragmenty: Percewala z Walii czyli Opowieści o gralu Chrétiena de Troyes; Wielkiego testamentu F. Villona; Pieśni o Rolandzie).</small>
+                            <div>
+                                <strong>ARCYDZIEŁA FRANCUSKIEGO ŚREDNIOWIECZA</strong><br>
+                                <small>wybór M. Żurowski, oprac. Z. Czerny, Warszawa 1968 (obowiązują fragmenty: Percewala z Walii czyli Opowieści o gralu Chrétiena de Troyes; Wielkiego testamentu F. Villona; Pieśni o Rolandzie).</small>
+                            </div>
                         </div>
                         <h4>PODRĘCZNIK</h4>
                         <div class="reading-list-item">
-                            <strong>T. WITCZAK: Literatura Średniowiecza</strong><br>
-                            <small>wyd. 3 zmien., Warszawa 1999 i wyd. nast.</small>
+                            <div>
+                                <strong>T. WITCZAK: Literatura Średniowiecza</strong><br>
+                                <small>wyd. 3 zmien., Warszawa 1999 i wyd. nast.</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -427,66 +216,96 @@
                         <h4>TEKSTY</h4>
                         <h5>LITERATURA POLSKA</h5>
                         <div class="reading-list-item">
-                            <strong>ANTOLOGIA POEZJI ŁACIŃSKIEJ W POLSCE</strong><br>
-                            <small>oprac. I. Lewandowski, Poznań 1996; lub: ANTOLOGIA POEZJI POLSKO-ŁACIŃSKIEJ 1470-1543, oprac. A. Jelicz, wyd. 2 zmien. (obowiązują utwory: F. Kallimacha, M. Hussowskiego, J. Dantyszka, A. Krzyckiego, K. Janicjusza).</small>
+                            <div>
+                                <strong>ANTOLOGIA POEZJI ŁACIŃSKIEJ W POLSCE</strong><br>
+                                <small>oprac. I. Lewandowski, Poznań 1996; lub: ANTOLOGIA POEZJI POLSKO-ŁACIŃSKIEJ 1470-1543, oprac. A. Jelicz, wyd. 2 zmien. (obowiązują utwory: F. Kallimacha, M. Hussowskiego, J. Dantyszka, A. Krzyckiego, K. Janicjusza).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>M. REJ: Wybór pism</strong><br>
-                            <small>oprac. A. Kochan, BN I 308 (obowiązują: Krótka rozprawa miedzy trzemi osobami...; Żywot człowieka poczciwego).</small>
+                            <div>
+                                <strong>M. REJ: Wybór pism</strong><br>
+                                <small>oprac. A. Kochan, BN I 308 (obowiązują: Krótka rozprawa miedzy trzemi osobami...; Żywot człowieka poczciwego).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>A. FRYCZ-MODRZEWSKI: Wybór pism</strong><br>
-                            <small>oprac. W. Voisé, BN I 229 (obowiązuje: O naprawie Rzeczypospolitej).</small>
+                            <div>
+                                <strong>A. FRYCZ-MODRZEWSKI: Wybór pism</strong><br>
+                                <small>oprac. W. Voisé, BN I 229 (obowiązuje: O naprawie Rzeczypospolitej).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>J. KOCHANOWSKI: Treny</strong><br>
-                            <small>oprac. J. Pelc, wyd. 14 zmien. i nast., BN I 1.</small>
+                            <div>
+                                <strong>J. KOCHANOWSKI: Treny</strong><br>
+                                <small>oprac. J. Pelc, wyd. 14 zmien. i nast., BN I 1.</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>J.KOCHANOWSKI: Fraszki</strong><br>
-                            <small>oprac. J. Pelc, wyd. 2 zmien., BN I 163 (wybór).</small>
+                            <div>
+                                <strong>J. KOCHANOWSKI: Fraszki</strong><br>
+                                <small>oprac. J. Pelc, wyd. 2 zmien., BN I 163 (wybór).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>J. KOCHANOWSKI: Pieśni</strong><br>
-                            <small>oprac. L. Szczerbicka-Ślęk, BN I 100.</small>
+                            <div>
+                                <strong>J. KOCHANOWSKI: Pieśni</strong><br>
+                                <small>oprac. L. Szczerbicka-Ślęk, BN I 100.</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>J. KOCHANOWSKI: Psałterz Dawidów</strong><br>
-                            <small>oprac. J. Ziomek, BN I 174; lub: oprac. K. Meller, Kraków 1997, BP (wybór).</small>
+                            <div>
+                                <strong>J. KOCHANOWSKI: Psałterz Dawidów</strong><br>
+                                <small>oprac. J. Ziomek, BN I 174; lub: oprac. K. Meller, Kraków 1997, BP (wybór).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>J. KOCHANOWSKI: Odprawa posłów greckich</strong><br>
-                            <small>oprac. T. Ulewicz, BN I 3.</small>
+                            <div>
+                                <strong>J. KOCHANOWSKI: Odprawa posłów greckich</strong><br>
+                                <small>oprac. T. Ulewicz, BN I 3.</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>Ł. GÓRNICKI: Dworzanin polski</strong><br>
-                            <small>oprac. R. Pollak, BN I 109; lub: oprac. R. Pollak, Warszawa 1950; lub w: Pisma, oprac. R. Pollak, t. 1, Warszawa 1961 (obowiązują: księgi 1-2).</small>
+                            <div>
+                                <strong>Ł. GÓRNICKI: Dworzanin polski</strong><br>
+                                <small>oprac. R. Pollak, BN I 109; lub: oprac. R. Pollak, Warszawa 1950; lub w: Pisma, oprac. R. Pollak, t. 1, Warszawa 1961 (obowiązują: księgi 1-2).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>M. SĘP-SZARZYŃSKI: Rytmy abo Wiersze polskie oraz cykl erotyków</strong><br>
-                            <small>oprac. J. Krzyżanowski, wyd. 2 zmien., BN I 118; lub: Poezje, oprac. J. S. Gruchała, Kraków 1997, BP.</small>
+                            <div>
+                                <strong>M. SĘP-SZARZYŃSKI: Rytmy abo Wiersze polskie oraz cykl erotyków</strong><br>
+                                <small>oprac. J. Krzyżanowski, wyd. 2 zmien., BN I 118; lub: Poezje, oprac. J. S. Gruchała, Kraków 1997, BP.</small>
+                            </div>
                         </div>
                         <h5>LITERATURA OBCA</h5>
                         <div class="reading-list-item">
-                            <strong>F. PETRARKA: Sonety do Laury</strong><br>
-                            <small>przeł. J. Kurek, wstęp M. Brahmer; lub w: Pisma, oprac. K. Morawski, BN II 206; lub: przeł. A. Kuciak.</small>
+                            <div>
+                                <strong>F. PETRARKA: Sonety do Laury</strong><br>
+                                <small>przeł. J. Kurek, wstęp M. Brahmer; lub w: Pisma, oprac. K. Morawski, BN II 206; lub: przeł. A. Kuciak.</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>G. BOCCACCIO: Dekameron</strong><br>
-                            <small>przeł. E. Boyé (obowiązują: Sokół; Gryzelda).</small>
+                            <div>
+                                <strong>G. BOCCACCIO: Dekameron</strong><br>
+                                <small>przeł. E. Boyé (obowiązują: Sokół; Gryzelda).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>ERAZM z ROTTERDAMU: Wybór pism</strong><br>
-                            <small>przeł. M. Cytowska, E. Jędrkiewicz, M. Mejor, oprac. M. Cytowska, BN II 231 (obowiązują: Pochwała Głupoty; Skarga pokoju).</small>
+                            <div>
+                                <strong>ERAZM z ROTTERDAMU: Wybór pism</strong><br>
+                                <small>przeł. M. Cytowska, E. Jędrkiewicz, M. Mejor, oprac. M. Cytowska, BN II 231 (obowiązują: Pochwała Głupoty; Skarga pokoju).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>F. RABELAIS: Gargantua i Pantagruel</strong><br>
-                            <small>przeł. T. Boy-Żeleński (wybór).</small>
+                            <div>
+                                <strong>F. RABELAIS: Gargantua i Pantagruel</strong><br>
+                                <small>przeł. T. Boy-Żeleński (wybór).</small>
+                            </div>
                         </div>
                         <h4>PODRĘCZNIK</h4>
                         <div class="reading-list-item">
-                            <strong>J. ZIOMEK: Literatura Odrodzenia</strong><br>
-                            <small>Warszawa 1987 i wyd. nast.</small>
+                            <div>
+                                <strong>J. ZIOMEK: Literatura Odrodzenia</strong><br>
+                                <small>Warszawa 1987 i wyd. nast.</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -504,66 +323,96 @@
                         <h4>TEKSTY</h4>
                         <h5>LITERATURA POLSKA</h5>
                         <div class="reading-list-item">
-                            <strong>POECI POLSKIEGO BAROKU</strong><br>
-                            <small>oprac. J. Sokołowska, K. Żurowska, t. 1-2, Warszawa 1965; lub:</small>
+                            <div>
+                                <strong>POECI POLSKIEGO BAROKU</strong><br>
+                                <small>oprac. J. Sokołowska, K. Żurowska, t. 1-2, Warszawa 1965; lub:</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>I W ODMIANACH CZASU SMAK JEST. ANTOLOGIA POLSKIEJ POEZJI EPOKI BAROKU</strong><br>
-                            <small>oprac. J. Sokołowska, Warszawa 1991 (obowiązują utwory: S. Grabowieckiego, H. Morsztyna, D. Naborowskiego, S. Zimorowica, M. K. Sarbiewskiego, S. Twardowskiego, K. Opalińskiego, S. H. Lubomirskiego, J. Baki).</small>
+                            <div>
+                                <strong>I W ODMIANACH CZASU SMAK JEST. ANTOLOGIA POLSKIEJ POEZJI EPOKI BAROKU</strong><br>
+                                <small>oprac. J. Sokołowska, Warszawa 1991 (obowiązują utwory: S. Grabowieckiego, H. Morsztyna, D. Naborowskiego, S. Zimorowica, M. K. Sarbiewskiego, S. Twardowskiego, K. Opalińskiego, S. H. Lubomirskiego, J. Baki).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>STAROPOLSKA POEZJA ZIEMIAŃSKA. ANTOLOGIA</strong><br>
-                            <small>oprac. J. S. Gruchała, S. Grzeszczuk, Warszawa 1988 (obowiązują utwory: S. F. Klonowica, A. Zbylitowskiego, D. Naborowskiego, H. Morsztyna, S. Twardowskiego, J. Gawińskiego).</small>
+                            <div>
+                                <strong>STAROPOLSKA POEZJA ZIEMIAŃSKA. ANTOLOGIA</strong><br>
+                                <small>oprac. J. S. Gruchała, S. Grzeszczuk, Warszawa 1988 (obowiązują utwory: S. F. Klonowica, A. Zbylitowskiego, D. Naborowskiego, H. Morsztyna, S. Twardowskiego, J. Gawińskiego).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>„WYSOKI UMYSŁ W DOLNYCH RZECZACH ZAWIKŁANY”. ANTOLOGIA POLSKIEJ POEZJI METAFIZYCZNEJ EPOKI BAROKU</strong><br>
-                            <small>oprac. K. Mrowcewicz, Warszawa 1993 (obowiązują utwory: K. Miaskowskiego, Z. Morsztyna, S. H. Lubomirskiego).</small>
+                            <div>
+                                <strong>„WYSOKI UMYSŁ W DOLNYCH RZECZACH ZAWIKŁANY". ANTOLOGIA POLSKIEJ POEZJI METAFIZYCZNEJ EPOKI BAROKU</strong><br>
+                                <small>oprac. K. Mrowcewicz, Warszawa 1993 (obowiązują utwory: K. Miaskowskiego, Z. Morsztyna, S. H. Lubomirskiego).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>ANTOLOGIA LITERATURY SOWIZDRZALSKIEJ XVI I XVII WIEKU</strong><br>
-                            <small>oprac. S. Grzeszczuk, wyd. 2 zmien., BN I 186 (obowiązują: Wyprawa plebańska; Peregrynacja Maćkowa).</small>
+                            <div>
+                                <strong>ANTOLOGIA LITERATURY SOWIZDRZALSKIEJ XVI I XVII WIEKU</strong><br>
+                                <small>oprac. S. Grzeszczuk, wyd. 2 zmien., BN I 186 (obowiązują: Wyprawa plebańska; Peregrynacja Maćkowa).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>P. SKARGA: Kazania sejmowe</strong><br>
-                            <small>oprac. J. Tazbir, BN I 70 (obowiązują dwa wybrane kazania).</small>
+                            <div>
+                                <strong>P. SKARGA: Kazania sejmowe</strong><br>
+                                <small>oprac. J. Tazbir, BN I 70 (obowiązują dwa wybrane kazania).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>S. SZYMONOWIC: Sielanki i pozostałe wiersze polskie</strong><br>
-                            <small>oprac. J. Pelc, wyd. 2 zmien., BN I 82 (obowiązują: Dafnis; Żeńcy; Czary).</small>
+                            <div>
+                                <strong>S. SZYMONOWIC: Sielanki i pozostałe wiersze polskie</strong><br>
+                                <small>oprac. J. Pelc, wyd. 2 zmien., BN I 82 (obowiązują: Dafnis; Żeńcy; Czary).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>W. POTOCKI: Wiersze wybrane</strong><br>
-                            <small>oprac. S. Grzeszczuk, wstęp J. S. Gruchała, BN I 19.</small>
+                            <div>
+                                <strong>W. POTOCKI: Wiersze wybrane</strong><br>
+                                <small>oprac. S. Grzeszczuk, wstęp J. S. Gruchała, BN I 19.</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>J. A. MORSZTYN: Wybór poezji</strong><br>
-                            <small>oprac. W. Weintraub, BN I 257.</small>
+                            <div>
+                                <strong>J. A. MORSZTYN: Wybór poezji</strong><br>
+                                <small>oprac. W. Weintraub, BN I 257.</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>W. KOCHOWSKI: Utwory poetyckie</strong><br>
-                            <small>oprac. M. Eustachiewicz, BN I 92 (obowiązują: psalmy 1, 2, 7, 9, 26, 27, 33, 36 z Psalmodii polskiej).</small>
+                            <div>
+                                <strong>W. KOCHOWSKI: Utwory poetyckie</strong><br>
+                                <small>oprac. M. Eustachiewicz, BN I 92 (obowiązują: psalmy 1, 2, 7, 9, 26, 27, 33, 36 z Psalmodii polskiej).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>J. Ch. PASEK: Pamiętniki</strong><br>
-                            <small>oprac. R. Pollak, Warszawa 1955 i wyd. nast.; lub: oprac. W. Czapliński, BN I 62 (obowiązują: lata 1656-1662).</small>
+                            <div>
+                                <strong>J. Ch. PASEK: Pamiętniki</strong><br>
+                                <small>oprac. R. Pollak, Warszawa 1955 i wyd. nast.; lub: oprac. W. Czapliński, BN I 62 (obowiązują: lata 1656-1662).</small>
+                            </div>
                         </div>
                         <h5>LITERATURA OBCA</h5>
                         <div class="reading-list-item">
-                            <strong>T. TASSO: Gofred abo Jeruzalem wyzwolona</strong><br>
-                            <small>przeł. P. Kochanowski, oprac. R. Pollak, BN II 4 (wybór).</small>
+                            <div>
+                                <strong>T. TASSO: Gofred abo Jeruzalem wyzwolona</strong><br>
+                                <small>przeł. P. Kochanowski, oprac. R. Pollak, BN II 4 (wybór).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>P. CORNEILLE: Cyd</strong><br>
-                            <small>przeł. J. A. Morsztyn, Warszawa 1954 (wyd. synoptyczne); lub w: J. A. Morsztyn: Utwory zebrane, oprac. L. Kukulski, Warszawa 1971; lub: P. Corneille, J. A. Morsztyn: Cyd, oprac. A. Karpiński, A. Stetnowski, Warszawa 1999.</small>
+                            <div>
+                                <strong>P. CORNEILLE: Cyd</strong><br>
+                                <small>przeł. J. A. Morsztyn, Warszawa 1954 (wyd. synoptyczne); lub w: J. A. Morsztyn: Utwory zebrane, oprac. L. Kukulski, Warszawa 1971; lub: P. Corneille, J. A. Morsztyn: Cyd, oprac. A. Karpiński, A. Stetnowski, Warszawa 1999.</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>MOLIER: Wybór komedii</strong><br>
-                            <small>przeł. B. Korzeniewski, oprac. J. Pawłowiczowa, BN II 248; lub: Skąpiec, przeł. i oprac. T. Boy-Żeleński, BN II 6; lub: Świętoszek, przeł. idem, BN II 40; lub: Mizantrop, przeł. idem, BN II 2; lub: Mieszczanin szlachcicem, przeł. idem, BN II 10 (obowiązuje jedna wybrana komedia).</small>
+                            <div>
+                                <strong>MOLIER: Wybór komedii</strong><br>
+                                <small>przeł. B. Korzeniewski, oprac. J. Pawłowiczowa, BN II 248; lub: Skąpiec, przeł. i oprac. T. Boy-Żeleński, BN II 6; lub: Świętoszek, przeł. idem, BN II 40; lub: Mizantrop, przeł. idem, BN II 2; lub: Mieszczanin szlachcicem, przeł. idem, BN II 10 (obowiązuje jedna wybrana komedia).</small>
+                            </div>
                         </div>
                         <h4>PODRĘCZNIK</h4>
                         <div class="reading-list-item">
-                            <strong>C. HERNAS: Literatura baroku</strong><br>
-                            <small>Warszawa 1987 i wyd. nast.</small>
+                            <div>
+                                <strong>C. HERNAS: Literatura baroku</strong><br>
+                                <small>Warszawa 1987 i wyd. nast.</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -581,78 +430,114 @@
                         <h4>TEKSTY</h4>
                         <h5>LITERATURA POLSKA</h5>
                         <div class="reading-list-item">
-                            <strong>„ŚWIAT POPRAWIAĆ – ZUCHWAŁE RZEMIOSŁO”. ANTOLOGIA POEZJI POLSKIEGO OŚWIECENIA</strong><br>
-                            <small>oprac. T. Kostkiewiczowa, Z. Goliński, Warszawa 1981 i wyd. nast. (obowiązują wiersze anonimowe z okresu konfederacji barskiej oraz utwory: E. Drużbackiej, A. Naruszewicza, I. Krasickiego, S. Trembeckiego, J. Szymanowskiego, K. Benisławskiej, F. Karpińskiego, F. D. Kniaźnina, K. Węgierskiego, J. Jasińskiego).</small>
+                            <div>
+                                <strong>„ŚWIAT POPRAWIAĆ – ZUCHWAŁE RZEMIOSŁO". ANTOLOGIA POEZJI POLSKIEGO OŚWIECENIA</strong><br>
+                                <small>oprac. T. Kostkiewiczowa, Z. Goliński, Warszawa 1981 i wyd. nast. (obowiązują wiersze anonimowe z okresu konfederacji barskiej oraz utwory: E. Drużbackiej, A. Naruszewicza, I. Krasickiego, S. Trembeckiego, J. Szymanowskiego, K. Benisławskiej, F. Karpińskiego, F. D. Kniaźnina, K. Węgierskiego, J. Jasińskiego).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>MIĘDZY ROZPACZĄ I NADZIEJĄ. ANTOLOGIA POEZJI POROZBIOROWEJ LAT 1793-1806</strong><br>
-                            <small>wstęp P. Żbikowski, oprac. M. Nalepa, Kraków 2006 (obowiązują utwory: A. J. Czartoryskiego, C. Godebskiego, F. Karpińskiego, K. Koźmiana, S. Trembeckiego, J. P. Woronicza).</small>
+                            <div>
+                                <strong>MIĘDZY ROZPACZĄ I NADZIEJĄ. ANTOLOGIA POEZJI POROZBIOROWEJ LAT 1793-1806</strong><br>
+                                <small>wstęp P. Żbikowski, oprac. M. Nalepa, Kraków 2006 (obowiązują utwory: A. J. Czartoryskiego, C. Godebskiego, F. Karpińskiego, K. Koźmiana, S. Trembeckiego, J. P. Woronicza).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>I. KRASICKI: Monachomachia. Antymonachomachia</strong><br>
-                            <small>oprac. Z. Goliński, BN I 197.</small>
+                            <div>
+                                <strong>I. KRASICKI: Monachomachia. Antymonachomachia</strong><br>
+                                <small>oprac. Z. Goliński, BN I 197.</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>I. KRASICKI: Satyry i listy</strong><br>
-                            <small>oprac. Z. Goliński, wstęp J. T. Pokrzywniak, wyd. 2 zmien., BN I 169 (obowiązują: Do króla; Świat zepsuty; Pijaństwo; Życie dworskie; Palinodia; Pochwała wieku; Człowiek i zwierz; Mędrek; Podróż; listy O obowiązkach obywatela; Do księdza A. Naruszewicza).</small>
+                            <div>
+                                <strong>I. KRASICKI: Satyry i listy</strong><br>
+                                <small>oprac. Z. Goliński, wstęp J. T. Pokrzywniak, wyd. 2 zmien., BN I 169 (obowiązują: Do króla; Świat zepsuty; Pijaństwo; Życie dworskie; Palinodia; Pochwała wieku; Człowiek i zwierz; Mędrek; Podróż; listy O obowiązkach obywatela; Do księdza A. Naruszewicza).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>I. KRASICKI: Bajki</strong><br>
-                            <small>oprac. Z. Goliński, BN I 220 (wybór).</small>
+                            <div>
+                                <strong>I. KRASICKI: Bajki</strong><br>
+                                <small>oprac. Z. Goliński, BN I 220 (wybór).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>I. KRASICKI: Mikołaja Doświadczyńskiego przypadki</strong><br>
-                            <small>oprac. M. Klimowicz, BN I 41.</small>
+                            <div>
+                                <strong>I. KRASICKI: Mikołaja Doświadczyńskiego przypadki</strong><br>
+                                <small>oprac. M. Klimowicz, BN I 41.</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>„MONITOR” 1765-1785</strong><br>
-                            <small>oprac. E. Aleksandrowska, BN I 226 (wybór artykułów).</small>
+                            <div>
+                                <strong>„MONITOR" 1765-1785</strong><br>
+                                <small>oprac. E. Aleksandrowska, BN I 226 (wybór artykułów).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>OŚWIECENI O LITERATURZE</strong><br>
-                            <small>oprac. T. Kostkiewiczowa, Z. Goliński, t. 1, Warszawa 1993 (obowiązują: Listy o guście J. Szymanowskiego, wybór fragmentów z O wymowie w prozie albo wierszu F. Karpińskiego oraz Sztuka rymotwórcza F. K. Dmochowskiego); t. 2, Warszawa 1995 (obowiązują: O pismach klasycznych i romantycznych J. Śniadeckiego oraz oba teksty E. Słowackiego).</small>
+                            <div>
+                                <strong>OŚWIECENI O LITERATURZE</strong><br>
+                                <small>oprac. T. Kostkiewiczowa, Z. Goliński, t. 1, Warszawa 1993 (obowiązują: Listy o guście J. Szymanowskiego, wybór fragmentów z O wymowie w prozie albo wierszu F. Karpińskiego oraz Sztuka rymotwórcza F. K. Dmochowskiego); t. 2, Warszawa 1995 (obowiązują: O pismach klasycznych i romantycznych J. Śniadeckiego oraz oba teksty E. Słowackiego).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>F. ZABŁOCKI: Fircyk w zalotach</strong><br>
-                            <small>oprac. J. Pawłowiczowa, BN I 176.</small>
+                            <div>
+                                <strong>F. ZABŁOCKI: Fircyk w zalotach</strong><br>
+                                <small>oprac. J. Pawłowiczowa, BN I 176.</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>W. BOGUSŁAWSKI: Cud albo Krakowiaki i Górale</strong><br>
-                            <small>oprac. M. Klimowicz, BN I 162.</small>
+                            <div>
+                                <strong>W. BOGUSŁAWSKI: Cud albo Krakowiaki i Górale</strong><br>
+                                <small>oprac. M. Klimowicz, BN I 162.</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>POLSKA TRAGEDIA NEOKLASYCYSTYCZNA</strong><br>
-                            <small>oprac. D. Ratajczakowa, BN I 260 (obowiązuje Barbara Radziwiłłówna A. Felińskiego).</small>
+                            <div>
+                                <strong>POLSKA TRAGEDIA NEOKLASYCYSTYCZNA</strong><br>
+                                <small>oprac. D. Ratajczakowa, BN I 260 (obowiązuje Barbara Radziwiłłówna A. Felińskiego).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>M. WIRTEMBERSKA: Malwina, czyli Domyślność serca</strong><br>
-                            <small>oprac. W. Billip, Warszawa 1958 i wyd. nast.</small>
+                            <div>
+                                <strong>M. WIRTEMBERSKA: Malwina, czyli Domyślność serca</strong><br>
+                                <small>oprac. W. Billip, Warszawa 1958 i wyd. nast.</small>
+                            </div>
                         </div>
                         <h5>LITERATURA OBCA</h5>
                         <div class="reading-list-item">
-                            <strong>L. STERNE: Podróż sentymentalna</strong><br>
-                            <small>przeł. A. Ginczanka, oprac. Z. Sinkowa, BN II 174; lub: Życie i myśli J. W. Pana Tristrama Shandy, tłum. K. Tarnowska, oprac. W. Chwalewik, Warszawa 1974 i wyd. nast.</small>
+                            <div>
+                                <strong>L. STERNE: Podróż sentymentalna</strong><br>
+                                <small>przeł. A. Ginczanka, oprac. Z. Sinkowa, BN II 174; lub: Życie i myśli J. W. Pana Tristrama Shandy, tłum. K. Tarnowska, oprac. W. Chwalewik, Warszawa 1974 i wyd. nast.</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>D. DIDEROT: Kubuś Fatalista i jego pan</strong><br>
-                            <small>przeł. T. Boy-Żeleński, weryfikacja przekł. i komentarz E. Skibińska-Cieńska, M. Cieński, wstęp M. Cieński, BN II 243.</small>
+                            <div>
+                                <strong>D. DIDEROT: Kubuś Fatalista i jego pan</strong><br>
+                                <small>przeł. T. Boy-Żeleński, weryfikacja przekł. i komentarz E. Skibińska-Cieńska, M. Cieński, wstęp M. Cieński, BN II 243.</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>VOLTAIRE: Powiastki filozoficzne</strong><br>
-                            <small>przeł. T. Boy-Żeleński (obowiązują: Zadig, Kandyd).</small>
+                            <div>
+                                <strong>VOLTAIRE: Powiastki filozoficzne</strong><br>
+                                <small>przeł. T. Boy-Żeleński (obowiązują: Zadig, Kandyd).</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>J. J. ROUSSEAU: Nowa Heloiza</strong><br>
-                            <small>przeł. i oprac. E. Rzadkowska, BN II 136 (wybór).</small>
+                            <div>
+                                <strong>J. J. ROUSSEAU: Nowa Heloiza</strong><br>
+                                <small>przeł. i oprac. E. Rzadkowska, BN II 136 (wybór).</small>
+                            </div>
                         </div>
                         <h4>PODRĘCZNIKI</h4>
                         <div class="reading-list-item">
-                            <strong>M. KLIMOWICZ: Literatura Oświecenia</strong><br>
-                            <small>Warszawa 1988 i wyd. nast.</small>
+                            <div>
+                                <strong>M. KLIMOWICZ: Literatura Oświecenia</strong><br>
+                                <small>Warszawa 1988 i wyd. nast.</small>
+                            </div>
                         </div>
                         <div class="reading-list-item">
-                            <strong>R. PRZYBYLSKI: Klasycyzm, czyli Prawdziwy koniec Królestwa Polskiego</strong><br>
-                            <small>Warszawa 1983 i wyd. nast. (obowiązuje cz. 2: Prawdziwy koniec Królestwa Polskiego).</small>
+                            <div>
+                                <strong>R. PRZYBYLSKI: Klasycyzm, czyli Prawdziwy koniec Królestwa Polskiego</strong><br>
+                                <small>Warszawa 1983 i wyd. nast. (obowiązuje cz. 2: Prawdziwy koniec Królestwa Polskiego).</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -660,764 +545,35 @@
         </div>
     </div>
 
-    <!-- New: Schedule Generator Section -->
+    <!-- Schedule Generator Section -->
     <div id="plan-generator-section" class="content-section d-none">
-      <h2 class="text-center text-dark mb-4 fs-3 fw-bold">Generator Planów Zajęć</h2>
-      <p class="text-center text-secondary mb-4">Podaj zakres godzin, a znajdę wszystkie możliwe, niekolidujące ze sobą plany!</p>
-      
-      <div class="d-flex flex-wrap justify-content-center align-items-center gap-3 mb-4">
-        <div class="form-group">
-            <label for="start-time-input">Godzina od:</label>
-            <input type="time" id="start-time-input" class="form-control" value="08:00">
-        </div>
-        <div class="form-group">
-            <label for="end-time-input">Godzina do:</label>
-            <input type="time" id="end-time-input" class="form-control" value="18:00">
-        </div>
-        <button id="generate-all-plans-button" class="btn btn-primary btn-lg shadow rounded-pill mt-3">Generuj!</button>
-      </div>
-      
-      <div id="progress-container" class="progress-container d-none">
-          <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-      </div>
-
-      <hr class="my-4 border-secondary">
-
-      <div id="all-possible-plans-display" class="d-flex flex-column gap-4">
-        <!-- Generated plans will be rendered here -->
-        <p class="text-center text-secondary">Wyniki pojawią się tutaj.</p>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // Inicjalizacja biblioteki jsPDF (dla generowania PDF)
-    const { jsPDF } = window.jspdf;
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const availableScheduleDisplay = document.getElementById('available-schedule-display');
-      const myScheduleDisplay = document.getElementById('my-schedule-display');
-      const messageBox = document.getElementById('message-box');
-      const conflictModal = document.getElementById('conflict-modal');
-      const modalCancelButton = document.getElementById('modal-cancel');
-      const modalReplaceButton = document.getElementById('modal-replace');
-      const currentConflictTitle = document.getElementById('current-conflict-title');
-      const newConflictTitle = document.getElementById('new-conflict-title');
-
-      const generateHtmlButton = document.getElementById('generate-html-button');
-      const generatePdfButton = document.getElementById('generate-pdf-button');
-      const clearMyPlanButton = document.getElementById('clear-my-plan-button');
-
-      const myScheduleSection = document.getElementById('my-schedule-section');
-      const readingListSection = document.getElementById('reading-list-section');
-      const planGeneratorSection = document.getElementById('plan-generator-section');
-
-      const showScheduleButton = document.getElementById('show-schedule-button');
-      const showReadingListButton = document.getElementById('show-reading-list-button');
-      const showGeneratorButton = document.getElementById('show-generator-button');
-      
-      const startTimeInput = document.getElementById('start-time-input');
-      const endTimeInput = document.getElementById('end-time-input');
-      const generateAllPlansButton = document.getElementById('generate-all-plans-button');
-      const allPossiblePlansDisplay = document.getElementById('all-possible-plans-display');
-      const progressBar = document.getElementById('progress-bar');
-      const progressContainer = document.getElementById('progress-container');
-
-
-      let availableSchedules = [];
-      let mySchedules = [];
-      let pendingConflictSchedule = null; // Stores the schedule that caused a conflict
-
-      // Zaktualizowano o Poniedziałek
-      const daysOfWeek = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek'];
-
-      // --- Utility Functions ---
-      function showMessage(message, type) {
-        messageBox.textContent = message;
-        messageBox.className = `message-box show ${type}`; // Użyto szablonu literału
-        setTimeout(() => {
-          messageBox.classList.remove('show');
-        }, 3000);
-      }
-
-      function timeToMinutes(timeString) {
-          const [hours, minutes] = timeString.split(':').map(Number);
-          return hours * 60 + minutes;
-      }
-
-      function checkConflict(newSchedule, targetSchedules) {
-          const newStart = timeToMinutes(newSchedule.time);
-          const newEnd = timeToMinutes(newSchedule.endTime);
-
-          // Sprawdzenie, czy przedmiot o tym samym tytule już istnieje w planie
-          const isDuplicate = targetSchedules.some(s => s.title.split(' - ')[0] === newSchedule.title.split(' - ')[0]);
-          if (isDuplicate) {
-              showMessage(`Przedmiot "${newSchedule.title.split(' - ')[0]}" już znajduje się w Twoim planie!`, 'error');
-              return true; // Zwróć true, aby zasygnalizować konflikt (duplikat)
-          }
-
-          // Sprawdzenie, czy przekroczono limit 7 ćwiczeń
-          if (targetSchedules.filter(s => s.title.includes('Ćwiczenia')).length >= 7) {
-              showMessage('Nie możesz dodać więcej niż 7 ćwiczeń w tygodniu!', 'error');
-              return true; // Zwróć true, aby zasygnalizować konflikt (limit)
-          }
-
-          for (const existingSchedule of targetSchedules) {
-              if (existingSchedule.day === newSchedule.day) {
-                  const existingStart = timeToMinutes(existingSchedule.time);
-                  const existingEnd = timeToMinutes(existingSchedule.endTime);
-
-                  // Check for overlap
-                  if ((newStart < existingEnd && newEnd > existingStart) ||
-                      (existingStart < newEnd && existingEnd > newStart)) {
-                      return existingSchedule; // Return the conflicting schedule
-                  }
-              }
-          }
-          return null; // No conflict
-      }
-
-      // --- Data Management (LocalStorage) ---
-      function saveAvailableSchedules() {
-        localStorage.setItem('availableSchedules', JSON.stringify(availableSchedules));
-      }
-
-      function loadAvailableSchedules() {
-        const storedSchedules = localStorage.getItem('availableSchedules');
-        if (storedSchedules) {
-          availableSchedules = JSON.parse(storedSchedules);
-        } else {
-          // Inicjalizacja z przykładowymi danymi, jeśli brak danych w localStorage
-          availableSchedules = [
-            // Istniejące dane (Filologia Polska - Ćwiczenia)
-            { id: '1', title: 'Poetyka z analizą dzieła literackiego - Ćwiczenia', day: 'Piątek', time: '08:00', endTime: '09:30', instructor: 'Ewa Szkudlarek', group: 'Grupa 1', color: '#B0E0E6' },
-            { id: '2', title: 'Poetyka z analizą dzieła literackiego - Ćwiczenia', day: 'Wtorek', time: '11:30', endTime: '13:00', instructor: 'Ewa Szkudlarek', group: 'Grupa 2', color: '#B0E0E6' },
-            { id: '3', title: 'Poetyka z analizą dzieła literackiego - Ćwiczenia', day: 'Piątek', time: '09:45', endTime: '11:15', instructor: 'Agnieszka Rydz', group: 'Grupa 3', color: '#B0E0E6' },
-            { id: '4', title: 'Poetyka z analizą dzieła literackiego - Ćwiczenia', day: 'Środa', time: '13:15', endTime: '14:45', instructor: 'Joanna Maleszyńska', group: 'Grupa 4', color: '#B0E0E6' },
-            { id: '5', title: 'Poetyka z analizą dzieła literackiego - Ćwiczenia', day: 'Czwartek', time: '09:45', endTime: '11:15', instructor: 'Jacek Nowakowski', group: 'Grupa 5', color: '#B0E0E6' },
-            { id: '6', title: 'Poetyka z analizą dzieła literackiego - Ćwiczenia', day: 'Wtorek', time: '13:15', endTime: '14:45', instructor: 'Krzysztof Gajda', group: 'Grupa 6', color: '#B0E0E6' },
-            { id: '7', title: 'Poetyka z analizą dzieła literackiego - Ćwiczenia', day: 'Czwartek', time: '17:00', endTime: '18:30', instructor: 'Magdalena Bednarek', group: 'Grupa 7', color: '#B0E0E6' },
-            { id: '8', title: 'Poetyka z analizą dzieła literackiego - Ćwiczenia', day: 'Czwartek', time: '08:00', endTime: '09:30', instructor: 'Ewelina Bulewicz-Rewers', group: 'Grupa 8', color: '#B0E0E6' },
-
-            { id: '9', title: 'Warsztat polonisty - pisanie - Ćwiczenia', day: 'Wtorek', time: '13:30', endTime: '15:00', instructor: 'Katarzyna Czarnecka', group: 'Grupa 1', color: '#90EE90' },
-            { id: '10', title: 'Warsztat polonisty - pisanie - Ćwiczenia', day: 'Środa', time: '15:15', endTime: '16:45', instructor: 'Katarzyna Czarnecka', group: 'Grupa 2', color: '#90EE90' },
-            { id: '11', title: 'Warsztat polonisty - pisanie - Ćwiczenia', day: 'Wtorek', time: '11:30', endTime: '13:00', instructor: 'Jarosław Liberek', group: 'Grupa 3', color: '#90EE90' },
-            { id: '12', title: 'Warsztat polonisty - pisanie - Ćwiczenia', day: 'Środa', time: '15:15', endTime: '16:45', instructor: 'Jarosław Liberek', group: 'Grupa 4', color: '#90EE90' },
-            { id: '13', title: 'Warsztat polonisty - pisanie - Ćwiczenia', day: 'Wtorek', time: '09:45', endTime: '11:15', instructor: 'Monika Błaszczak-Stachowiak', group: 'Grupa 5', color: '#90EE90' },
-            { id: '14', title: 'Warsztat polonisty - pisanie - Ćwiczenia', day: 'Wtorek', time: '15:15', endTime: '16:45', instructor: 'Dorota Masłej', group: 'Grupa 6', color: '#90EE90' },
-            { id: '15', title: 'Warsztat polonisty - pisanie - Ćwiczenia', day: 'Wtorek', time: '17:00', endTime: '18:30', instructor: 'Aleksandra Sikorska-Krystek', group: 'Grupa 7', color: '#90EE90' },
-            { id: '16', title: 'Warsztat polonisty - pisanie - Ćwiczenia', day: 'Wtorek', time: '08:00', endTime: '09:30', instructor: 'Jagoda Kurnikowska', group: 'Grupa 8', color: '#90EE90' },
-
-            { id: '17', title: 'Język łaciński z elementami kultury antycznej - Ćwiczenia', day: 'Piątek', time: '11:30', endTime: '13:00', instructor: 'Monika Szczot', group: 'Grupa 1', color: '#FFB6C1' },
-            { id: '18', title: 'Język łaciński z elementami kultury antycznej - Ćwiczenia', day: 'Piątek', time: '13:30', endTime: '15:00', instructor: 'Monika Szczot', group: 'Grupa 2', color: '#FFB6C1' },
-            { id: '19', title: 'Język łaciński z elementami kultury antycznej - Ćwiczenia', day: 'Piątek', time: '09:45', endTime: '11:15', instructor: 'Konrad Dominas', group: 'Grupa 3', color: '#FFB6C1' },
-            { id: '20', title: 'Język łaciński z elementami kultury antycznej - Ćwiczenia', day: 'Czwartek', time: '08:00', endTime: '09:30', instructor: 'Katarzyna Kaniecka-Juszczak', group: 'Grupa 4', color: '#FFB6C1' },
-            { id: '21', title: 'Język łaciński z elementami kultury antycznej - Ćwiczenia', day: 'Czwartek', time: '09:45', endTime: '11:15', instructor: 'Katarzyna Kaniecka-Juszczak', group: 'Grupa 5', color: '#FFB6C1' },
-            { id: '22', title: 'Język łaciński z elementami kultury antycznej - Ćwiczenia', day: 'Czwartek', time: '11:30', endTime: '13:00', instructor: 'Katarzyna Kaniecka-Juszczak', group: 'Grupa 6', color: '#FFB6C1' },
-            { id: '23', title: 'Język łaciński z elementami kultury antycznej - Ćwiczenia', day: 'Czwartek', time: '18:45', endTime: '20:15', instructor: 'Katarzyna Kaniecka-Juszczak', group: 'Grupa 7', color: '#FFB6C1' },
-            { id: '24', title: 'Język łaciński z elementami kultury antycznej - Ćwiczenia', day: 'Czwartek', time: '15:15', endTime: '16:45', instructor: 'Marlena Puk', group: 'Grupa 8', color: '#FFB6C1' },
-
-            { id: '25', title: 'Nauka o współczesnym języku polskim - Ćwiczenia', day: 'Piątek', time: '08:00', endTime: '09:30', instructor: 'Karolina Ruta-Korytowska', group: 'Grupa 1', color: '#D8BFD8' },
-            { id: '26', title: 'Nauka o współczesnym języku polskim - Ćwiczenia', day: 'Piątek', time: '11:30', endTime: '13:00', instructor: 'Karolina Ruta-Korytowska', group: 'Grupa 2', color: '#D8BFD8' },
-            { id: '27', title: 'Nauka o współczesnym języku polskim - Ćwiczenia', day: 'Czwartek', time: '11:30', endTime: '13:00', instructor: 'Małgorzata Rybka', group: 'Grupa 3', color: '#D8BFD8' },
-            { id: '28', title: 'Nauka o współczesnym języku polskim - Ćwiczenia', day: 'Czwartek', time: '13:30', endTime: '15:00', instructor: 'Małgorzata Rybka', group: 'Grupa 4', color: '#D8BFD8' },
-            { id: '29', title: 'Nauka o współczesnym języku polskim - Ćwiczenia', day: 'Czwartek', time: '09:45', endTime: '11:15', instructor: 'Marta Wrześniewska-Pietrzak', group: 'Grupa 5', color: '#D8BFD8' },
-            { id: '30', title: 'Nauka o współczesnym języku polskim - Ćwiczenia', day: 'Piątek', time: '09:45', endTime: '11:15', instructor: 'Ewa Kaptur', group: 'Grupa 6', color: '#D8BFD8' },
-            { id: '31', title: 'Nauka o współczesnym języku polskim - Ćwiczenia', day: 'Czwartek', time: '17:00', endTime: '18:30', instructor: 'Alicja Przybylska', group: 'Grupa 7', color: '#D8BFD8' },
-            { id: '32', title: 'Nauka o współczesnym języku polskim - Ćwiczenia', day: 'Czwartek', time: '08:00', endTime: '09:30', instructor: 'Magdalena Socha', group: 'Grupa 8', color: '#D8BFD8' },
-
-            { id: '33', title: 'Nauki pomocnicze - Ćwiczenia', day: 'Środa', time: '08:00', endTime: '09:30', instructor: 'Olga Ziółkowska', group: 'Grupa 1', color: '#FFFACD' },
-            { id: '34', title: 'Nauki pomocnicze - Ćwiczenia', day: 'Środa', time: '09:45', endTime: '11:15', instructor: 'Olga Ziółkowska', group: 'Grupa 2', color: '#FFFACD' },
-            { id: '35', title: 'Nauki pomocnicze - Ćwiczenia', day: 'Środa', time: '11:30', endTime: '13:00', instructor: 'Olga Ziółkowska', group: 'Grupa 3', color: '#FFFACD' },
-            { id: '36', title: 'Nauki pomocnicze - Ćwiczenia', day: 'Wtorek', time: '13:30', endTime: '15:00', instructor: 'Marek Osiewicz', group: 'Grupa 4', color: '#FFFACD' },
-            { id: '37', title: 'Nauki pomocnicze - Ćwiczenia', day: 'Wtorek', time: '15:15', endTime: '16:45', instructor: 'Marek Osiewicz', group: 'Grupa 5', color: '#FFFACD' },
-            { id: '38', title: 'Nauki pomocnicze - Ćwiczenia', day: 'Wtorek', time: '11:30', endTime: '13:00', instructor: 'Katarzyna Krzak-Weiss', group: 'Grupa 6', color: '#FFFACD' },
-            { id: '39', title: 'Nauki pomocnicze - Ćwiczenia', day: 'Wtorek', time: '08:00', endTime: '09:30', instructor: 'N/A', group: 'Grupa 7', color: '#FFFACD' }, 
-            { id: '40', title: 'Nauki pomocnicze - Ćwiczenia', day: 'Wtorek', time: '09:45', endTime: '11:15', instructor: 'N/A', group: 'Grupa 8', color: '#FFFACD' }, 
-
-            { id: '41', title: 'Mówienie - warsztat polonisty - Ćwiczenia', day: 'Wtorek', time: '11:30', endTime: '13:00', instructor: 'Joanna Smól', group: 'Grupa 1', color: '#E6E6FA' },
-            { id: '42', title: 'Mówienie - warsztat polonisty - Ćwiczenia', day: 'Wtorek', time: '13:30', endTime: '15:00', instructor: 'Joanna Smól', group: 'Grupa 2', color: '#E6E6FA' },
-            { id: '43', title: 'Mówienie - warsztat polonisty - Ćwiczenia', day: 'Wtorek', time: '15:15', endTime: '16:45', instructor: 'Justyna Kobus', group: 'Grupa 3', color: '#E6E6FA' },
-            { id: '44', title: 'Mówienie - warsztat polonisty - Ćwiczenia', day: 'Środa', time: '15:15', endTime: '16:45', instructor: 'Justyna Kobus', group: 'Grupa 4', color: '#E6E6FA' },
-            { id: '45', title: 'Mówienie - warsztat polonisty - Ćwiczenia', day: 'Czwartek', time: '17:00', endTime: '18:30', instructor: 'Błażej Osowski', group: 'Grupa 5', color: '#E6E6FA' },
-            { id: '46', title: 'Mówienie - warsztat polonisty - Ćwiczenia', day: 'Środa', time: '15:15', endTime: '16:45', instructor: 'Ewa Kaptur', group: 'Grupa 6', color: '#E6E6FA' },
-            { id: '47', title: 'Mówienie - warsztat polonisty - Ćwiczenia', day: 'Wtorek', time: '09:45', endTime: '11:15', instructor: 'Eliza Grzelak', group: 'Grupa 7', color: '#E6E6FA' },
-            { id: '48', title: 'Mówienie - warsztat polonisty - Ćwiczenia', day: 'Wtorek', time: '08:00', endTime: '09:30', instructor: 'Przemysław Raczyk', group: 'Grupa 8', color: '#E6E6FA' },
-
-            { id: '49', title: 'Historia literatury staropolskiej i oświecenia - Ćwiczenia', day: 'Czwartek', time: '11:30', endTime: '13:00', instructor: 'Grzegorz Raubo', group: 'Grupa 1', color: '#ADD8E6' },
-            { id: '50', title: 'Historia literatury staropolskiej i oświecenia - Ćwiczenia', day: 'Czwartek', time: '13:30', endTime: '15:00', instructor: 'Grzegorz Raubo', group: 'Grupa 2', color: '#ADD8E6' },
-            { id: '51', title: 'Historia literatury staropolskiej i oświecenia - Ćwiczenia', day: 'Piątek', time: '09:45', endTime: '11:15', instructor: 'Leszek Teusz', group: 'Grupa 3', color: '#ADD8E6' },
-            { id: '52', title: 'Historia literatury staropolskiej i oświecenia - Ćwiczenia', day: 'Piątek', time: '11:30', endTime: '13:00', instructor: 'Leszek Teusz', group: 'Grupa 4', color: '#ADD8E6' },
-            { id: '53', title: 'Historia literatury staropolskiej i oświecenia - Ćwiczenia', day: 'Czwartek', time: '17:00', endTime: '18:30', instructor: 'Maciej Parkitny', group: 'Grupa 5', color: '#ADD8E6' },
-            { id: '54', title: 'Historia literatury staropolskiej i oświecenia - Ćwiczenia', day: 'Czwartek', time: '18:45', endTime: '20:15', instructor: 'Maciej Parkitny', group: 'Grupa 6', color: '#ADD8E6' },
-            { id: '55', title: 'Historia literatury staropolskiej i oświecenia - Ćwiczenia', day: 'Czwartek', time: '09:45', endTime: '11:15', instructor: 'Katarzyna Meller', group: 'Grupa 7', color: '#ADD8E6' },
-            { id: '56', title: 'Historia literatury staropolskiej i oświecenia - Ćwiczenia', day: 'Czwartek', time: '08:00', endTime: '09:30', instructor: 'Patrycja Bąkowska', group: 'Grupa 8', color: '#ADD8E6' },
-            
-            // NOWE ZAJĘCIA - Anglistyka
-            { id: '57', title: 'Zarys historii Niderlandów - Wykład', day: 'Czwartek', time: '15:00', endTime: '15:45', instructor: 'mgr Przemysław Paluszek', group: 'Anglistyka', color: '#FFDAB9' },
-            { id: '58', title: 'Językoznawstwo ogólne - Wykład', day: 'Poniedziałek', time: '13:15', endTime: '14:45', instructor: 'prof. UAM dr hab. Karolina Krawczak-Glynn', group: 'Anglistyka', color: '#FFDAB9' },
-            { id: '59', title: 'Historia Wysp Brytyjskich - Wykład', day: 'Poniedziałek', time: '16:45', endTime: '18:15', instructor: 'dr Tomasz Skirecki', group: 'Anglistyka', color: '#FFDAB9' },
-            { id: '60', title: 'Historie teatru I - Wykład', day: 'Środa', time: '15:00', endTime: '16:45', instructor: 'prof. UAM dr hab. Jacek Fabiszak', group: 'Anglistyka', color: '#FFDAB9' },
-
-            // NOWE ZAJĘCIA - Filologia Polska i Klasyczna
-            { id: '61', title: 'Dzieje literatury staropolskiej i Oświecenia - Wykład', day: 'Środa', time: '17:00', endTime: '18:30', instructor: 'prof. dr hab. Grzegorz Raubo', group: 'Filologia Polska', color: '#F0E68C' },
-            { id: '62', title: 'Historia filozofii - Wykład', day: 'Poniedziałek', time: '15:15', endTime: '16:45', instructor: 'prof. UAM dr hab. Sylwia Panek', group: 'Filologia Polska', color: '#F0E68C' },
-            { id: '63', title: 'Historia literatury romantyzmu - Wykład', day: 'Środa', time: '17:00', endTime: '18:30', instructor: 'prof. dr hab. Jerzy Fiećko', group: 'Filologia Polska', color: '#F0E68C' },
-            { id: '64', title: 'Literatura i życie literackie po roku 1918 - Wykład', day: 'Środa', time: '15:15', endTime: '16:45', instructor: 'prof. UAM dr hab. Sylwia Panek; prof. UAM dr hab. Agnieszka Kwiatkowska', group: 'Filologia Polska', color: '#F0E68C' },
-            { id: '65', title: 'Literatura i kultura starożytnej Grecji - Wykład', day: 'Poniedziałek', time: '09:45', endTime: '11:15', instructor: 'prof. dr hab. Krystyna Bartol', group: 'Filologia Klasyczna', color: '#F0E68C' },
-            { id: '66', title: 'Nauka o współczesnym języku polskim: fonetyka, fonologia - Wykład', day: 'Poniedziałek', time: '13:30', endTime: '15:00', instructor: 'dr hab. Paweł Nowakowski', group: 'Filologia Polska', color: '#F0E68C' },
-            { id: '67', title: 'Nauka o współczesnym języku polskim: składnia - Wykład', day: 'Czwartek', time: '13:30', endTime: '15:00', instructor: 'prof. UAM dr hab. Romana Łapa', group: 'Filologia Polska', color: '#F0E68C' },
-            { id: '68', title: 'Słowotwórstwo współczesnego języka polskiego - Wykład', day: 'Czwartek', time: '18:45', endTime: '20:15', instructor: 'prof. UAM dr hab. Błażej Osowski', group: 'Filologia Polska', color: '#F0E68C' },
-            { id: '69', title: 'Teoria literatury - Wykład', day: 'Wtorek', time: '09:45', endTime: '11:15', instructor: 'prof. dr hab. Michał Januszkiewicz', group: 'Filologia Polska', color: '#F0E68C' },
-            { id: '70', title: 'Wprowadzenie do historii literatury polskiej okresu pozytywizmu - Wykład', day: 'Środa', time: '15:15', endTime: '16:45', instructor: 'prof. UAM dr hab. Marek Wedemann', group: 'Filologia Polska', color: '#F0E68C' },
-            { id: '71', title: 'Wstęp do literaturoznawstwa - Wykład', day: 'Środa', time: '09:45', endTime: '11:15', instructor: 'prof. UAM dr hab. Beata Przymuszała', group: 'Filologia Polska', color: '#F0E68C' },
-            { id: '72', title: 'Wykłady z historii Polski (966-1795) - Wykład', day: 'Poniedziałek', time: '17:00', endTime: '18:30', instructor: 'prof. UAM dr hab. Wojciech Sajkowski', group: 'Filologia Polska', color: '#F0E68C' },
-
-            // NOWE ZAJĘCIA - Neofilologia
-            { id: '73', title: 'Cywilizacje Azji. Literatura popularna przedwojennej Japonii - Wykład', day: 'Czwartek', time: '11:30', endTime: '13:00', instructor: 'Andrzej Świrkowski', group: 'Neofilologia', color: '#AFEEEE' },
-            { id: '74', title: 'Konwersatorium z literatury powszechnej - Wykład', day: 'Wtorek', time: '08:00', endTime: '09:30', instructor: 'prof. UAM dr hab. Arkadiusz Żychliński', group: 'Neofilologia', color: '#AFEEEE' },
-            { id: '75', title: 'Historia Skandynawii - Wykład', day: 'Środa', time: '11:30', endTime: '13:00', instructor: 'prof. UAM dr hab. Sylwia Izabela Schab, prof. UAM dr hab Magdalena Żmuda-Trzebiatowska, dr Tadeusz Wojciech Lange', group: 'Neofilologia', color: '#AFEEEE' },
-            { id: '76', title: 'Zarys literatur skandynawskich (Dania, Norwegia) - Wykład', day: 'Wtorek', time: '09:45', endTime: '11:15', instructor: 'prof. UAM Sylwia Izabela Schab, dr Aleksandra Wilkus', group: 'Neofilologia', color: '#AFEEEE' },
-            { id: '77', title: 'Podstawy tłumaczenia konferencyjnego - Wykład', day: 'Poniedziałek', time: '15:00', endTime: '16:30', instructor: 'Hanka Błaszkowska', group: 'Neofilologia (godzina szacowana)', color: '#AFEEEE' },
-            { id: '78', title: 'Visual Communication in Eastern European Cinema - Wykład', day: 'Piątek', time: '15:00', endTime: '16:30', instructor: 'prof. dr hab. Beata Waligórska-Olejniczak', group: 'Neofilologia', color: '#AFEEEE' },
-            { id: '79', title: 'Wstęp do socjolingwistyki - Wykład', day: 'Piątek', time: '11:30', endTime: '13:00', instructor: 'dr Zofia Szwed', group: 'Neofilologia', color: '#AFEEEE' },
-            { id: '80', title: 'Rosja współczesna - Wykład', day: 'Wtorek', time: '15:00', endTime: '16:30', instructor: 'dr Antoni Bortnowski', group: 'Neofilologia', color: '#AFEEEE' },
-            { id: '81', title: 'Literatura, sztuka, społeczeństwo francuskie I (średniowiecze) - Wykład', day: 'Wtorek', time: '16:45', endTime: '18:15', instructor: 'dr Marta Sukiennicka', group: 'Neofilologia', color: '#AFEEEE' },
-            { id: '82', title: 'Współczesne życie literackie krajów frankofońskich - Wykład', day: 'Wtorek', time: '09:45', endTime: '11:15', instructor: 'dr Jędrzej Pawlicki', group: 'Neofilologia', color: '#AFEEEE' },
-            { id: '83', title: 'Historia Francji - Wykład', day: 'Środa', time: '09:45', endTime: '11:15', instructor: 'dr Jędrzej Pawlicki', group: 'Neofilologia (Opcja 1)', color: '#AFEEEE' },
-            { id: '84', title: 'Historia Francji - Wykład', day: 'Środa', time: '11:30', endTime: '13:00', instructor: 'dr Jędrzej Pawlicki', group: 'Neofilologia (Opcja 2)', color: '#AFEEEE' },
-            { id: '85', title: 'Historia Półwyspu Iberyjskiego - Wykład', day: 'Piątek', time: '08:00', endTime: '09:30', instructor: 'prof. UAM dr hab. Alfons Gregori', group: 'Neofilologia', color: '#AFEEEE' },
-            { id: '86', title: 'Włochy współczesne - Wykład', day: 'Czwartek', time: '08:00', endTime: '09:30', instructor: 'mgr Wawrzyniec Kryza', group: 'Neofilologia', color: '#AFEEEE' },
-            { id: '87', title: 'Współczesna literatura portugalska - Wykład', day: 'Środa', time: '16:45', endTime: '18:15', instructor: 'prof. UAM dr hab. Wojciech Charchalis', group: 'Neofilologia', color: '#AFEEEE' },
-            { id: '88', title: 'Kultura Portugalii - Wykład', day: 'Środa', time: '18:30', endTime: '20:00', instructor: 'prof. UAM dr hab. Wojciech Charchalis', group: 'Neofilologia', color: '#AFEEEE' },
-            { id: '89', title: 'Język i kultura Basków - Wykład', day: 'Poniedziałek', time: '13:15', endTime: '15:00', instructor: 'mgr Leire Lazcano Zapatera', group: 'Neofilologia (Część 1)', color: '#AFEEEE' },
-            { id: '90', title: 'Język i kultura Basków - Wykład', day: 'Czwartek', time: '15:00', endTime: '16:30', instructor: 'mgr Leire Lazcano Zapatera', group: 'Neofilologia (Część 2)', color: '#AFEEEE' },
-            { id: '91', title: 'Islam I - Wykład', day: 'Środa', time: '13:30', endTime: '15:00', instructor: 'Łukasz Piątak', group: 'Neofilologia (termin może ulec zmianie)', color: '#AFEEEE' },
-            { id: '92', title: 'Sztuka arabsko-muzułmańska - Wykład', day: 'Czwartek', time: '09:45', endTime: '11:15', instructor: 'Łukasz Piątak', group: 'Neofilologia (termin może ulec zmianie)', color: '#AFEEEE' },
-            { id: '93', title: 'Wstęp do nowogrecystyki - Wykład', day: 'Wtorek', time: '09:45', endTime: '11:15', instructor: 'prof. UAM dr hab. Karolina Gortych-Michalak', group: 'Neofilologia', color: '#AFEEEE' },
-            { id: '94', title: 'Statystyka - Wykład', day: 'Poniedziałek', time: '13:15', endTime: '16:30', instructor: 'dr Victoria Kamasa', group: 'Neofilologia', color: '#AFEEEE' },
-          ];
-        }
-      }
-
-      function saveMySchedules() {
-        localStorage.setItem('mySchedules', JSON.stringify(mySchedules));
-      }
-
-      function loadMySchedules() {
-        const storedMySchedules = localStorage.getItem('mySchedules');
-        if (storedMySchedules) {
-          mySchedules = JSON.parse(storedMySchedules);
-        }
-      }
-
-      // --- Rendering Functions ---
-      function renderSchedules(targetElement, schedulesArray, isMySchedule = false) {
-        targetElement.innerHTML = ''; // Clear previous content
-
-        const sortedSchedules = [...schedulesArray].sort((a, b) => {
-          const dayA = daysOfWeek.indexOf(a.day);
-          const dayB = daysOfWeek.indexOf(b.day);
-          if (dayA !== dayB) return dayA - dayB; // Sort by day
-          return a.time.localeCompare(b.time); // Then by time
-        });
-
-        daysOfWeek.forEach(day => {
-          const daySchedules = sortedSchedules.filter(s => s.day === day);
-          const dayColumn = document.createElement('div');
-          dayColumn.className = 'day-column bg-light p-3 rounded shadow-sm';
-          dayColumn.innerHTML = `
-            <h3 class="fs-5 fw-bold text-dark mb-2 text-center">${day}</h3>
-            <div class="timeline-container" style="min-height: 300px;" id="${targetElement.id}-day-${day}">
-              ${daySchedules.length === 0 ? '<p class="text-secondary text-center position-absolute top-50 start-50 translate-middle">Brak zajęć.</p>' : ''}
+        <h2 class="text-center text-dark mb-4 fs-3 fw-bold">Generator Planów Zajęć</h2>
+        <p class="text-center text-secondary mb-4">Podaj zakres godzin, a znajdę wszystkie możliwe, niekolidujące ze sobą plany!</p>
+        <div class="d-flex flex-wrap justify-content-center align-items-center gap-3 mb-4">
+            <div class="form-group">
+                <label for="start-time-input">Godzina od:</label>
+                <input type="time" id="start-time-input" class="form-control" value="08:00">
             </div>
-          `;
-          targetElement.appendChild(dayColumn);
+            <div class="form-group">
+                <label for="end-time-input">Godzina do:</label>
+                <input type="time" id="end-time-input" class="form-control" value="18:00">
+            </div>
+            <button id="generate-all-plans-button" class="btn btn-primary btn-lg shadow rounded-pill mt-3">Generuj!</button>
+        </div>
+        <div id="progress-container" class="progress-container d-none">
+            <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <hr class="my-4 border-secondary">
+        <div id="all-possible-plans-display" class="d-flex flex-column gap-4">
+            <!-- Generated plans will be rendered here -->
+            <p class="text-center text-secondary">Wyniki pojawią się tutaj.</p>
+        </div>
+    </div>
+</div>
 
-          const timelineContainer = dayColumn.querySelector('.timeline-container');
-
-          const groupedSchedules = {};
-          daySchedules.forEach(schedule => {
-            const timeKey = `${schedule.time}-${schedule.endTime}`;
-            if (!groupedSchedules[timeKey]) {
-              groupedSchedules[timeKey] = [];
-            }
-            groupedSchedules[timeKey].push(schedule);
-          });
-
-          Object.keys(groupedSchedules).forEach((timeKey, groupIndex) => {
-            const schedulesInGroup = groupedSchedules[timeKey];
-            schedulesInGroup.sort((a, b) => a.id.localeCompare(b.id));
-
-            schedulesInGroup.forEach((schedule, itemIndex) => {
-                const scheduleItem = document.createElement('div');
-                scheduleItem.id = `schedule-${schedule.id}`;
-                scheduleItem.className = 'schedule-item card d-flex flex-column';
-                const itemColor = schedule.color || '#cccccc';
-                scheduleItem.style.borderLeftColor = itemColor;
-
-                scheduleItem.innerHTML = `
-                  <h4 class="card-title fw-bold fs-6 text-dark">${schedule.title}</h4>
-                  <p class="card-text text-secondary small">🕒 ${schedule.time} - ${schedule.endTime}</p>
-                  <p class="card-text text-secondary small">👨‍🏫 ${schedule.instructor}</p>
-                  ${schedule.group ? `<p class="card-text text-secondary small">👥 ${schedule.group}</p>` : ''}
-                  <div class="mt-2 d-flex justify-content-end gap-1">
-                    ${isMySchedule
-                      ? `
-                        <button class="edit-my-schedule-button btn btn-warning btn-sm" data-id="${schedule.id}">Edytuj</button>
-                        <button class="remove-my-schedule-button btn btn-danger btn-sm" data-id="${schedule.id}">Usuń</button>
-                      `
-                      : ''}
-                  </div>
-                `;
-                timelineContainer.appendChild(scheduleItem);
-            });
-          });
-        });
-      }
-
-      function renderPossiblePlans(plansArray) {
-          allPossiblePlansDisplay.innerHTML = '';
-          if (plansArray.length === 0) {
-              allPossiblePlansDisplay.innerHTML = `<p class="text-center text-secondary">Nie znaleziono żadnych pasujących kombinacji.</p>`;
-              return;
-          }
-
-          plansArray.forEach((plan, index) => {
-              const planContainer = document.createElement('div');
-              planContainer.className = 'card shadow-sm p-3 mb-3';
-              planContainer.innerHTML = `<h5 class="fw-bold text-primary">Możliwość #${index + 1}</h5>`;
-              
-              const planGrid = document.createElement('div');
-              planGrid.className = 'schedule-grid-container';
-
-              daysOfWeek.forEach(day => {
-                  const daySchedules = plan.filter(s => s.day === day).sort((a, b) => a.time.localeCompare(b.time));
-                  const dayColumn = document.createElement('div');
-                  dayColumn.className = 'day-column bg-light p-3 rounded shadow-sm';
-                  dayColumn.innerHTML = `
-                      <h6 class="fw-bold text-dark text-center">${day}</h6>
-                      <div class="timeline-container" style="min-height: 100px;">
-                          ${daySchedules.length === 0 ? '<p class="text-secondary text-center position-absolute top-50 start-50 translate-middle">Brak zajęć.</p>' : ''}
-                      </div>
-                  `;
-                  const timelineContainer = dayColumn.querySelector('.timeline-container');
-                  daySchedules.forEach(schedule => {
-                      const scheduleItem = document.createElement('div');
-                      scheduleItem.className = 'schedule-item card d-flex flex-column';
-                      scheduleItem.style.borderLeftColor = schedule.color || '#cccccc';
-                      scheduleItem.innerHTML = `
-                          <h6 class="card-title fw-bold fs-6 text-dark">${schedule.title}</h6>
-                          <p class="card-text text-secondary small">🕒 ${schedule.time} - ${schedule.endTime}</p>
-                          <p class="card-text text-secondary small">👨‍🏫 ${schedule.instructor}</p>
-                          ${schedule.group ? `<p class="card-text text-secondary small">👥 ${schedule.group}</p>` : ''}
-                      `;
-                      timelineContainer.appendChild(scheduleItem);
-                  });
-                  planGrid.appendChild(dayColumn);
-              });
-              
-              planContainer.appendChild(planGrid);
-              allPossiblePlansDisplay.appendChild(planContainer);
-          });
-      }
-
-      // --- Event Listener Functions ---
-      function attachAvailableScheduleItemListeners() {
-        document.querySelectorAll('#available-schedule-display .schedule-item').forEach(item => {
-          item.onclick = (e) => {
-            if (e.target.tagName === 'BUTTON') {
-                return;
-            }
-            const id = item.id.replace('schedule-', '');
-            const scheduleToAdd = availableSchedules.find(s => s.id === id);
-
-            if (scheduleToAdd) {
-                const conflictingSchedule = checkConflict(scheduleToAdd, mySchedules);
-                if (conflictingSchedule === true) {
-                    return;
-                } else if (conflictingSchedule) {
-                    currentConflictTitle.textContent = conflictingSchedule.title;
-                    newConflictTitle.textContent = scheduleToAdd.title;
-                    pendingConflictSchedule = scheduleToAdd;
-                    conflictModal.classList.add('show');
-                } else {
-                    mySchedules.push({ ...scheduleToAdd, id: Date.now().toString() + '-' + scheduleToAdd.id });
-                    saveMySchedules();
-                    renderSchedules(myScheduleDisplay, mySchedules, true);
-                    attachMyScheduleItemListeners();
-                    showMessage('Zajęcia dodane do Twojego planu!', 'success');
-                }
-            }
-          };
-        });
-      }
-
-      function attachMyScheduleItemListeners() {
-        document.querySelectorAll('#my-schedule-display .schedule-item').forEach(item => {
-          const newItem = item.cloneNode(true);
-          item.parentNode.replaceChild(newItem, item);
-        });
-
-        document.querySelectorAll('.edit-my-schedule-button').forEach(button => {
-          button.onclick = (e) => {
-            const id = e.target.dataset.id;
-            const scheduleToEdit = mySchedules.find(s => s.id === id);
-            if (scheduleToEdit) {
-              const newTitle = prompt("Edytuj tytuł:", scheduleToEdit.title);
-              const newInstructor = prompt("Edytuj prowadzącego:", scheduleToEdit.instructor);
-              const newGroup = prompt("Edytuj grupę (opcjonalnie):", scheduleToEdit.group);
-              const newColor = prompt("Edytuj kolor (np. #FF0000):", scheduleToEdit.color);
-
-              if (newTitle !== null && newInstructor !== null) {
-                  const updatedSchedule = {
-                      ...scheduleToEdit,
-                      title: newTitle,
-                      instructor: newInstructor,
-                      group: newGroup,
-                      color: newColor || scheduleToEdit.color
-                  };
-                  mySchedules = mySchedules.map(s => s.id === id ? updatedSchedule : s);
-                  saveMySchedules();
-                  renderSchedules(myScheduleDisplay, mySchedules, true);
-                  attachMyScheduleItemListeners();
-                  showMessage('Zajęcia w Twoim planie zaktualizowane pomyślnie!', 'success');
-              } else {
-                  showMessage('Edycja anulowana.', 'info');
-              }
-            }
-          };
-        });
-
-        document.querySelectorAll('.remove-my-schedule-button').forEach(button => {
-          button.onclick = (e) => {
-            const id = e.target.dataset.id;
-            mySchedules = mySchedules.filter(s => s.id !== id);
-            saveMySchedules();
-            renderSchedules(myScheduleDisplay, mySchedules, true);
-            attachMyScheduleItemListeners();
-            showMessage('Zajęcia usunięte z Twojego planu!', 'success');
-          };
-        });
-      }
-
-      // --- Conflict Modal Event Listeners ---
-      modalCancelButton.addEventListener('click', () => {
-        conflictModal.classList.remove('show');
-        pendingConflictSchedule = null;
-      });
-
-      modalReplaceButton.addEventListener('click', () => {
-        if (pendingConflictSchedule) {
-            mySchedules = mySchedules.filter(
-                s => !(s.day === pendingConflictSchedule.day &&
-                        timeToMinutes(s.time) < timeToMinutes(pendingConflictSchedule.endTime) &&
-                        timeToMinutes(s.endTime) > timeToMinutes(pendingConflictSchedule.time))
-            );
-            mySchedules.push({ ...pendingConflictSchedule, id: Date.now().toString() + '-' + pendingConflictSchedule.id });
-            saveMySchedules();
-            renderSchedules(myScheduleDisplay, mySchedules, true);
-            attachMyScheduleItemListeners();
-            showMessage('Zajęcia zastąpione w Twoim planie!', 'success');
-        }
-        conflictModal.classList.remove('show');
-        pendingConflictSchedule = null;
-      });
-
-      clearMyPlanButton.addEventListener('click', () => {
-          mySchedules = [];
-          saveMySchedules();
-          renderSchedules(myScheduleDisplay, mySchedules, true);
-          attachMyScheduleItemListeners();
-          showMessage('Twój plan zajęć został wyczyszczony!', 'success');
-      });
-
-      // --- Generate HTML Plan Button Event Listener ---
-      generateHtmlButton.addEventListener('click', () => {
-        const fileName = prompt("Podaj nazwę pliku HTML (bez rozszerzenia):", "MojPlanZajec");
-        if (fileName) {
-          const htmlContent = `
-            <!DOCTYPE html>
-            <html lang="pl">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>${fileName}</title>
-              <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-              <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-              <style>
-                body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; padding: 1rem;}
-                * { border-radius: 0.5rem; }
-                .schedule-item {
-                  position: relative;
-                  padding: 0.75rem;
-                  border-left: 4px solid;
-                  margin-bottom: 0.75rem;
-                  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
-                  background-color: white;
-                }
-                .schedule-item h4 {
-                  font-size: 1rem;
-                  font-weight: 600;
-                  margin-bottom: 0.25rem;
-                }
-                .schedule-item p {
-                  font-size: 0.75rem;
-                  color: #4b5563;
-                  line-height: 1.2;
-                }
-                .schedule-grid-container {
-                  display: grid;
-                  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                  gap: 1rem;
-                }
-                .day-column {
-                  background-color: #f9fafb;
-                  padding: 1rem;
-                  border-radius: 0.5rem;
-                  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-                }
-                .timeline-container {
-                    min-height: 300px;
-                    overflow-y: auto;
-                    padding-top: 0.5rem;
-                    padding-right: 0.5rem;
-                }
-                @media (max-width: 768px) {
-                  .schedule-grid-container {
-                    grid-template-columns: 1fr;
-                  }
-                }
-              </style>
-            </head>
-            <body>
-              <div class="container-fluid bg-white shadow rounded-3 p-4 p-lg-5">
-                <h1 class="text-center text-dark mb-4 fs-2 fw-bold">Mój Osobisty Plan Zajęć</h1>
-                <div class="schedule-grid-container">
-                  ${daysOfWeek.map(day => {
-                    const daySchedules = mySchedules.filter(s => s.day === day).sort((a,b) => a.time.localeCompare(b.time));
-                    return `
-                      <div class="day-column bg-light p-3 rounded shadow-sm">
-                        <h3 class="fs-5 fw-bold text-dark mb-2 text-center">${day}</h3>
-                        <div class="timeline-container" style="min-height: 300px;">
-                          ${daySchedules.length === 0 ? '<p class="text-secondary text-center">Brak zajęć.</p>' : ''}
-                          ${daySchedules.map(schedule => {
-                            const itemColor = schedule.color || '#cccccc';
-                            return `
-                            <div style="background-color: ${itemColor}; border-left-color: ${itemColor};" class="schedule-item card d-flex flex-column">
-                              <h4 class="card-title fw-bold fs-6 text-dark">${schedule.title}</h4>
-                              <p class="card-text text-secondary small">🕒 ${schedule.time} - ${schedule.endTime}</p>
-                              <p class="card-text text-secondary small">👨‍🏫 ${schedule.instructor}</p>
-                              ${schedule.group ? `<p class="card-text text-secondary small">👥 ${schedule.group}</p>` : ''}
-                            </div>
-                            `;
-                          }).join('')}
-                        </div>
-                      </div>
-                    `;
-                  }).join('')}
-                </div>
-              </div>
-            </body>
-            </html>
-          `;
-
-          const blob = new Blob([htmlContent], { type: 'text/html' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `${fileName}.html`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          showMessage(`Plik "${fileName}.html" został wygenerowany!`, 'success');
-        } else {
-          showMessage('Generowanie pliku HTML anulowane.', 'info');
-        }
-      });
-
-      // --- Generate PDF Plan Button Event Listener ---
-      generatePdfButton.addEventListener('click', async () => {
-        const fileName = prompt("Podaj nazwę pliku PDF (bez rozszerzenia):", "MojPlanZajec");
-        if (!fileName) {
-          showMessage('Generowanie pliku PDF anulowane.', 'info');
-          return;
-        }
-
-        showMessage('Generuję PDF...', 'info');
-
-        try {
-          const element = document.getElementById('my-schedule-display');
-          element.style.width = '100%'; 
-
-          const canvas = await html2canvas(element, {
-            scale: 2,
-            useCORS: true,
-          });
-
-          const imgData = canvas.toDataURL('image/png');
-          const pdf = new jsPDF('p', 'mm', 'a4');
-          
-          const imgWidth = 210;
-          const pageHeight = 297;
-          const imgHeight = canvas.height * imgWidth / canvas.width;
-          let heightLeft = imgHeight;
-
-          let position = 0;
-
-          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-
-          while (heightLeft >= 0) {
-            position = heightLeft - imgHeight;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
-          }
-
-          pdf.save(`${fileName}.pdf`);
-          element.style.width = '';
-          showMessage(`Plik "${fileName}.pdf" został wygenerowany!`, 'success');
-
-        } catch (error) {
-          console.error("Błąd podczas generowania PDF:", error);
-          showMessage('Wystąpił błąd podczas generowania pliku PDF. Spróbuj ponownie.', 'error');
-        }
-      });
-
-      // --- NEW: Generate all possible combinations ---
-      generateAllPlansButton.addEventListener('click', () => {
-          const startTime = startTimeInput.value;
-          const endTime = endTimeInput.value;
-
-          if (!startTime || !endTime) {
-              showMessage('Proszę podać zarówno godzinę rozpoczęcia, jak i zakończenia.', 'error');
-              return;
-          }
-          if (timeToMinutes(startTime) >= timeToMinutes(endTime)) {
-              showMessage('Godzina rozpoczęcia musi być wcześniejsza niż godzina zakończenia.', 'error');
-              return;
-          }
-          
-          allPossiblePlansDisplay.innerHTML = `<p class="text-center text-secondary">Generuję plany... to może potrwać.</p>`;
-          progressContainer.classList.remove('d-none');
-          progressBar.style.width = '0%';
-
-          setTimeout(() => {
-              const schedulesByDay = daysOfWeek.reduce((acc, day) => {
-                  acc[day] = availableSchedules.filter(s => s.day === day && 
-                      timeToMinutes(s.time) >= timeToMinutes(startTime) && 
-                      timeToMinutes(s.endTime) <= timeToMinutes(endTime)
-                  );
-                  return acc;
-              }, {});
-
-              const subjectsByTitle = availableSchedules.reduce((acc, curr) => {
-                  const subjectTitle = curr.title.split(' - ')[0];
-                  if (!acc[subjectTitle]) {
-                      acc[subjectTitle] = [];
-                  }
-                  acc[subjectTitle].push(curr);
-                  return acc;
-              }, {});
-
-              const uniqueSubjects = Object.keys(subjectsByTitle);
-              const possiblePlans = [];
-              let totalCombinations = 0;
-              const combinationsPerSubject = uniqueSubjects.map(subject => subjectsByTitle[subject].length);
-              
-              function findCombinations(currentPlan, subjectIndex) {
-                  if (subjectIndex === uniqueSubjects.length) {
-                      possiblePlans.push(currentPlan);
-                      return;
-                  }
-
-                  const subject = uniqueSubjects[subjectIndex];
-                  const currentSubjectSchedules = subjectsByTitle[subject];
-
-                  // Option 1: Don't take this subject
-                  findCombinations(currentPlan, subjectIndex + 1);
-
-                  // Option 2: Take one of the classes for this subject
-                  currentSubjectSchedules.forEach(schedule => {
-                      const hasConflict = currentPlan.some(existingSchedule => {
-                          const newStart = timeToMinutes(schedule.time);
-                          const newEnd = timeToMinutes(schedule.endTime);
-                          const existingStart = timeToMinutes(existingSchedule.time);
-                          const existingEnd = timeToMinutes(existingSchedule.endTime);
-                          return existingSchedule.day === schedule.day &&
-                              (newStart < existingEnd && newEnd > existingStart);
-                      });
-
-                      if (!hasConflict) {
-                          findCombinations([...currentPlan, schedule], subjectIndex + 1);
-                      }
-                  });
-                  
-                  // Update progress bar
-                  const progressPercentage = (subjectIndex / uniqueSubjects.length) * 100;
-                  progressBar.style.width = `${progressPercentage}%`;
-              }
-              
-              findCombinations([], 0);
-              progressContainer.classList.add('d-none');
-              renderPossiblePlans(possiblePlans);
-              showMessage(`Znaleziono ${possiblePlans.length} możliwych planów!`, 'success');
-          }, 100);
-      });
-
-
-      // --- Toggle Sections Logic ---
-      function setActiveButton(activeButtonId) {
-          const buttons = [showScheduleButton, showReadingListButton, showGeneratorButton];
-          buttons.forEach(btn => {
-              if (btn.id === activeButtonId) {
-                  btn.classList.add('btn-primary');
-                  btn.classList.remove('btn-secondary');
-              } else {
-                  btn.classList.add('btn-secondary');
-                  btn.classList.remove('btn-primary');
-              }
-          });
-      }
-
-      showScheduleButton.addEventListener('click', () => {
-        myScheduleSection.classList.remove('d-none');
-        readingListSection.classList.add('d-none');
-        planGeneratorSection.classList.add('d-none');
-        setActiveButton('show-schedule-button');
-      });
-
-      showReadingListButton.addEventListener('click', () => {
-        myScheduleSection.classList.add('d-none');
-        readingListSection.classList.remove('d-none');
-        planGeneratorSection.classList.add('d-none');
-        setActiveButton('show-reading-list-button');
-      });
-      
-      showGeneratorButton.addEventListener('click', () => {
-        myScheduleSection.classList.add('d-none');
-        readingListSection.classList.add('d-none');
-        planGeneratorSection.classList.remove('d-none');
-        setActiveButton('show-generator-button');
-      });
-
-
-      // Initial load and render
-      loadAvailableSchedules();
-      loadMySchedules();
-
-      renderSchedules(availableScheduleDisplay, availableSchedules, false);
-      attachAvailableScheduleItemListeners();
-
-      renderSchedules(myScheduleDisplay, mySchedules, true);
-      attachMyScheduleItemListeners();
-      
-      setActiveButton('show-schedule-button');
-    });
-  </script>
-  <!-- Bootstrap JS Bundle with Popper -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<!-- Własny kod JavaScript -->
+<script src="script.js"></script>
 </body>
 </html>
