@@ -1,19 +1,16 @@
-
 <!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mój Harmonogram Zajęć i Listy Lektur</title>
-    <!-- Bootstrap CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <!-- Google Fonts - Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- jsPDF and html2canvas CDN for PDF generation -->
+    <!-- Biblioteki do generowania PDF/obrazu -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJJoOoTXfzshSLSopTn4hvgTqizL0NiFit3DFYmFCaeGaSFuC9tmHVyDNxOfPChKwXkHtQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-EoHragS+WiaTghZGhMsQhS4sFJGtXA/8nJME1uY/x+tpzRBMH0Kz6H6HhZcK2fJ6B/W3/C4D1/zQd+tF6M5A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <!-- Własne style CSS -->
     <link rel="stylesheet" href="main.css">
+    <script src="script.js"></script>
 </head>
 <body class="p-4">
 <div class="container-fluid bg-white shadow rounded-3 p-4 p-lg-5 app-container">
@@ -53,21 +50,149 @@
             <button id="clear-my-plan-button" class="btn btn-warning btn-sm shadow rounded-pill">Wyczyść Mój Plan</button>
         </div>
 
-        <div id="my-schedule-display" class="schedule-grid-container mb-4">
-            <!-- My selected schedules will be rendered here -->
-        </div>
+        <div id="my-schedule-display" class="schedule-grid-container mb-4"></div>
 
         <hr class="my-4 border-secondary">
 
         <h2 class="text-center text-dark mb-4 fs-3 fw-bold">Dostępne Zajęcia</h2>
-        <div id="available-schedule-display" class="schedule-grid-container">
-            <!-- All available schedules will be rendered here by JavaScript -->
-        </div>
+        <div id="available-schedule-display" class="schedule-grid-container"></div>
     </div>
 
     <!-- Reading List Section -->
     <div id="reading-list-section" class="content-section d-none">
         <h2 class="text-center text-dark mb-4 fs-3 fw-bold">Obowiązkowe Lektury</h2>
+
+        <!-- ZASOBY ONLINE - Karty z linkami -->
+        <div class="mb-4">
+            <h3 class="fs-5 fw-bold text-dark mb-3 text-center">Zasoby online (darmowe)</h3>
+            <div class="row g-3">
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">Homer — Iliada</h5>
+                            <p class="card-subtitle text-muted mb-3">Wolne Lektury</p>
+                            <a class="btn btn-sm btn-primary" target="_blank" rel="noopener noreferrer" href="https://wolnelektury.pl/katalog/lektura/homer-iliada.html">Czytaj</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">Platon — Uczta</h5>
+                            <p class="card-subtitle text-muted mb-3">Wikiźródła (tłum. W. Witwicki)</p>
+                            <a class="btn btn-sm btn-primary" target="_blank" rel="noopener noreferrer" href="https://pl.wikisource.org/wiki/Uczta_(Platon,_t%C5%82um._Witwicki)">Czytaj</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">Wergiliusz — Eneida</h5>
+                            <p class="card-subtitle text-muted mb-3">Łacina: Perseus / The Latin Library</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener noreferrer" href="http://www.perseus.tufts.edu/hopper/text?doc=Verg.%20A.">Perseus</a>
+                                <a class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener noreferrer" href="https://www.thelatinlibrary.com/vergil.html">Latin Library</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">Horacy — Sztuka poetycka</h5>
+                            <p class="card-subtitle text-muted mb-3">Wikiźródła (List do Pizonów)</p>
+                            <a class="btn btn-sm btn-primary" target="_blank" rel="noopener noreferrer" href="https://pl.wikisource.org/wiki/Sztuka_poetycka_(Horacy)">Czytaj</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">Horacy — Ody</h5>
+                            <p class="card-subtitle text-muted mb-3">Wikiźródła (wybór)</p>
+                            <a class="btn btn-sm btn-primary" target="_blank" rel="noopener noreferrer" href="https://pl.wikisource.org/wiki/Ody_(Horacy)">Czytaj</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">Horacy — Epody</h5>
+                            <p class="card-subtitle text-muted mb-3">Wikiźródła (wybór)</p>
+                            <a class="btn btn-sm btn-primary" target="_blank" rel="noopener noreferrer" href="https://pl.wikisource.org/wiki/Epody_(Horacy)">Czytaj</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">Owidiusz — Metamorfozy</h5>
+                            <p class="card-subtitle text-muted mb-3">Wikiźródła (wybrane księgi)</p>
+                            <a class="btn btn-sm btn-primary" target="_blank" rel="noopener noreferrer" href="https://pl.wikisource.org/wiki/Metamorfozy_(Owidiusz)">Czytaj</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">Biblia (Wujek) — wybrane księgi</h5>
+                            <p class="card-subtitle text-muted mb-3">Wikiźródła</p>
+                            <a class="btn btn-sm btn-primary" target="_blank" rel="noopener noreferrer" href="https://pl.wikisource.org/wiki/Biblia_Wujka">Czytaj</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">Św. Augustyn — Wyznania</h5>
+                            <p class="card-subtitle text-muted mb-3">Wikiźródła (łacina, wybór)</p>
+                            <a class="btn btn-sm btn-primary" target="_blank" rel="noopener noreferrer" href="https://pl.wikisource.org/wiki/Aurelii_Augustini_Confessiones">Czytaj</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">Bogurodzica</h5>
+                            <p class="card-subtitle text-muted mb-3">Wikiźródła</p>
+                            <a class="btn btn-sm btn-primary" target="_blank" rel="noopener noreferrer" href="https://pl.wikisource.org/wiki/Bogurodzica">Czytaj</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">Posłuchajcie, bracia miła</h5>
+                            <p class="card-subtitle text-muted mb-3">Wikiźródła</p>
+                            <a class="btn btn-sm btn-primary" target="_blank" rel="noopener noreferrer" href="https://pl.wikisource.org/wiki/Pos%C5%82uchajcie,_bracia_mi%C5%82a">Czytaj</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">Rozmowa Mistrza Polikarpa ze Śmiercią</h5>
+                            <p class="card-subtitle text-muted mb-3">Wikiźródła</p>
+                            <a class="btn btn-sm btn-primary" target="_blank" rel="noopener noreferrer" href="https://pl.wikisource.org/wiki/Rozmowa_Mistrza_Polikarpa_ze_%C5%9Amierci%C4%85">Czytaj</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">Skarga umierającego</h5>
+                            <p class="card-subtitle text-muted mb-3">Wikiźródła</p>
+                            <a class="btn btn-sm btn-primary" target="_blank" rel="noopener noreferrer" href="https://pl.wikisource.org/wiki/Skarga_umieraj%C4%85cego">Czytaj</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="text-muted small mt-2 text-center">Uwaga: część współczesnych przekładów jest chroniona prawem autorskim — tu podlinkowano domenę publiczną i legalnie udostępnione źródła.</p>
+        </div>
+        <!-- KONIEC: ZASOBY ONLINE -->
 
         <div class="accordion" id="readingListAccordion">
             <!-- TRADITIO PAGANA -->
@@ -84,37 +209,27 @@
                                 <strong>HOMER: Iliada</strong><br>
                                 <small>przeł. K. Jeżewska, oprac. J. Łanowski, BN II 17; lub: przeł. I. Wieniewski.</small>
                             </div>
-                            <a href="https://wolnelektury.pl/katalog/lektura/homer-iliada.html" target="_blank" class="btn btn-sm btn-outline-info">Pobierz</a>
+                            <a href="https://wolnelektury.pl/katalog/lektura/homer-iliada.html" target="_blank" class="btn btn-sm btn-outline-info">Czytaj</a>
                         </div>
                         <div class="reading-list-item">
-                            <div>
-                                <strong>PLATON: Uczta</strong><br>
-                                <small>przeł. W. Witwicki.</small>
-                            </div>
+                            <strong>PLATON: Uczta</strong><br>
+                            <small>przeł. W. Witwicki.</small>
                         </div>
                         <div class="reading-list-item">
-                            <div>
-                                <strong>WERGILIUSZ: Eneida</strong><br>
-                                <small>przeł. T. Karyłowski, oprac. S. Stabryła, BN II 29 (obowiązują ks. 1-3; 6).</small>
-                            </div>
+                            <strong>WERGILIUSZ: Eneida</strong><br>
+                            <small>przeł. T. Karyłowski, oprac. S. Stabryła, BN II 29 (obowiązują ks. 1-3; 6).</small>
                         </div>
                         <div class="reading-list-item">
-                            <div>
-                                <strong>TRZY POETYKI KLASYCZNE</strong><br>
-                                <small>oprac. T. Sinko, BN II 57 (obowiązuje List do Pizonów Horacego).</small>
-                            </div>
+                            <strong>TRZY POETYKI KLASYCZNE</strong><br>
+                            <small>oprac. T. Sinko, BN II 57 (obowiązuje List do Pizonów Horacego).</small>
                         </div>
                         <div class="reading-list-item">
-                            <div>
-                                <strong>HORACY: Ody i epody</strong><br>
-                                <small>w: Dzieła wszystkie, oprac. O. Jurewicz; lub: przeł. A. Lam, Warszawa 2008 (obowiązuje wybór, w tym ody I 23; II 7; II 20; III 1; III 24; III 30; IV 7 oraz epody 2; 8; 16).</small>
-                            </div>
+                            <strong>HORACY: Ody i epody</strong><br>
+                            <small>w: Dzieła wszystkie, oprac. O. Jurewicz; lub: przeł. A. Lam, Warszawa 2008 (wybór).</small>
                         </div>
                         <div class="reading-list-item">
-                            <div>
-                                <strong>OWIDIUSZ: Metamorfozy</strong><br>
-                                <small>przeł. A. Kamieńska, S. Stabryła, oprac. S. Stabryła, BN II 76 (obowiązują ks. 1-2 oraz dwie wybrane).</small>
-                            </div>
+                            <strong>OWIDIUSZ: Metamorfozy</strong><br>
+                            <small>przeł. A. Kamieńska, S. Stabryła, oprac. S. Stabryła, BN II 76 (obowiązują ks. 1-2 oraz dwie wybrane).</small>
                         </div>
                     </div>
                 </div>
@@ -132,14 +247,13 @@
                         <div class="reading-list-item">
                             <div>
                                 <strong>PISMO ŚWIĘTE STAREGO I NOWEGO TESTAMENTU</strong><br>
-                                <small>przeł. J. Wujek; lub: Biblia Tyniecka, Kraków 1966 i wyd. nast. (obowiązują księgi: Genezis (Rodzaju); Lamentacje Jeremiasza; Pieśń nad Pieśniami; Ewangelia wg św. Łukasza; Ewangelia wg św. Jana; Apokalipsa św. Jana).</small>
+                                <small>Biblia Wujka; wybrane księgi: Rodzaju, Lamentacje, Pnp, Łk, J, Ap.</small>
                             </div>
+                            <a href="https://pl.wikisource.org/wiki/Biblia_Wujka" target="_blank" class="btn btn-sm btn-outline-info">Czytaj</a>
                         </div>
                         <div class="reading-list-item">
-                            <div>
-                                <strong>ŚW. AUGUSTYN: Wyznania</strong><br>
-                                <small>tłum. Z. Kubiak, Warszawa 1994 (wybór).</small>
-                            </div>
+                            <strong>ŚW. AUGUSTYN: Wyznania</strong><br>
+                            <small>tłum./łac. — źródła historyczne, edycje różne.</small>
                         </div>
                     </div>
                 </div>
@@ -159,45 +273,41 @@
                         <div class="reading-list-item">
                             <div>
                                 <strong>ŚREDNIOWIECZNA PROZA POLSKA</strong><br>
-                                <small>oprac. S. Vrtel-Wierczyński, BN I 68 (obowiązują: Kazania świętokrzyskie; Rozmyślanie przemyskie).</small>
+                                <small>m.in. Kazania świętokrzyskie; Rozmyślanie przemyskie.</small>
                             </div>
                         </div>
                         <div class="reading-list-item">
                             <div>
                                 <strong>ŚREDNIOWIECZNA PIEŚŃ RELIGIJNA POLSKA</strong><br>
-                                <small>oprac. M. Korolko, wyd. 2 zmien., BN I 65 (obowiązują: Bogurodzica; Posłuchajcie bracia miła; pieśni Władysława z Gielniowa; Chwała Tobie, Gospodynie).</small>
+                                <small>Bogurodzica; Posłuchajcie bracia miła; pieśni Wł. z Gielniowa…</small>
                             </div>
                         </div>
                         <div class="reading-list-item">
                             <div>
                                 <strong>POLSKA POEZJA ŚWIECKA XV WIEKU</strong><br>
-                                <small>oprac. M. Włodarski, BN I 60 (obowiązują: wiersz Słoty O chlebowym stole; Satyra na chytrych kmieciów; Pieśń o Wiklefie; Rozmowa Mistrza Polikarpa ze Śmiercią; Skarga umierającego; Cantilena inhonesta).</small>
+                                <small>Słota, Satyra na chytrych kmieciów, Rozmowa Mistrza Polikarpa…</small>
                             </div>
                         </div>
                         <div class="reading-list-item">
                             <div>
-                                <strong>ANONIM TZW. GALL: Kronika polska</strong><br>
-                                <small>przeł. R. Grodecki, oprac. M. Plezia, BN I 59.</small>
+                                <strong>ANONIM TZW. GALL: Kronika polska</strong>
                             </div>
                         </div>
                         <h5>LITERATURA OBCA</h5>
                         <div class="reading-list-item">
                             <div>
-                                <strong>DANTE ALIGHIERI: Boska komedia (Wybór)</strong><br>
-                                <small>przeł. E. Porębowicz, oprac. K. Morawski, BN II 187; lub: Boska komedia, przeł. A. Kuciak (obowiązuje cz. 1: Piekło).</small>
+                                <strong>DANTE: Boska komedia (Piekło)</strong>
                             </div>
                         </div>
                         <div class="reading-list-item">
                             <div>
-                                <strong>ARCYDZIEŁA FRANCUSKIEGO ŚREDNIOWIECZA</strong><br>
-                                <small>wybór M. Żurowski, oprac. Z. Czerny, Warszawa 1968 (obowiązują fragmenty: Percewala z Walii czyli Opowieści o gralu Chrétiena de Troyes; Wielkiego testamentu F. Villona; Pieśni o Rolandzie).</small>
+                                <strong>ARCYDZIEŁA FRANCUSKIEGO ŚREDNIOWIECZA</strong>
                             </div>
                         </div>
                         <h4>PODRĘCZNIK</h4>
                         <div class="reading-list-item">
                             <div>
-                                <strong>T. WITCZAK: Literatura Średniowiecza</strong><br>
-                                <small>wyd. 3 zmien., Warszawa 1999 i wyd. nast.</small>
+                                <strong>T. WITCZAK: Literatura Średniowiecza</strong>
                             </div>
                         </div>
                     </div>
@@ -217,94 +327,44 @@
                         <h5>LITERATURA POLSKA</h5>
                         <div class="reading-list-item">
                             <div>
-                                <strong>ANTOLOGIA POEZJI ŁACIŃSKIEJ W POLSCE</strong><br>
-                                <small>oprac. I. Lewandowski, Poznań 1996; lub: ANTOLOGIA POEZJI POLSKO-ŁACIŃSKIEJ 1470-1543, oprac. A. Jelicz, wyd. 2 zmien. (obowiązują utwory: F. Kallimacha, M. Hussowskiego, J. Dantyszka, A. Krzyckiego, K. Janicjusza).</small>
+                                <strong>ANTOLOGIA POEZJI ŁACIŃSKIEJ W POLSCE</strong>
                             </div>
                         </div>
                         <div class="reading-list-item">
                             <div>
-                                <strong>M. REJ: Wybór pism</strong><br>
-                                <small>oprac. A. Kochan, BN I 308 (obowiązują: Krótka rozprawa miedzy trzemi osobami...; Żywot człowieka poczciwego).</small>
+                                <strong>M. REJ: Wybór pism</strong>
                             </div>
                         </div>
                         <div class="reading-list-item">
                             <div>
-                                <strong>A. FRYCZ-MODRZEWSKI: Wybór pism</strong><br>
-                                <small>oprac. W. Voisé, BN I 229 (obowiązuje: O naprawie Rzeczypospolitej).</small>
+                                <strong>A. FRYCZ-MODRZEWSKI: Wybór pism</strong>
                             </div>
                         </div>
                         <div class="reading-list-item">
                             <div>
-                                <strong>J. KOCHANOWSKI: Treny</strong><br>
-                                <small>oprac. J. Pelc, wyd. 14 zmien. i nast., BN I 1.</small>
+                                <strong>J. KOCHANOWSKI: Treny, Fraszki, Pieśni, Psałterz, Odprawa…</strong>
                             </div>
                         </div>
                         <div class="reading-list-item">
                             <div>
-                                <strong>J. KOCHANOWSKI: Fraszki</strong><br>
-                                <small>oprac. J. Pelc, wyd. 2 zmien., BN I 163 (wybór).</small>
+                                <strong>Ł. GÓRNICKI: Dworzanin polski</strong>
                             </div>
                         </div>
                         <div class="reading-list-item">
                             <div>
-                                <strong>J. KOCHANOWSKI: Pieśni</strong><br>
-                                <small>oprac. L. Szczerbicka-Ślęk, BN I 100.</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>J. KOCHANOWSKI: Psałterz Dawidów</strong><br>
-                                <small>oprac. J. Ziomek, BN I 174; lub: oprac. K. Meller, Kraków 1997, BP (wybór).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>J. KOCHANOWSKI: Odprawa posłów greckich</strong><br>
-                                <small>oprac. T. Ulewicz, BN I 3.</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>Ł. GÓRNICKI: Dworzanin polski</strong><br>
-                                <small>oprac. R. Pollak, BN I 109; lub: oprac. R. Pollak, Warszawa 1950; lub w: Pisma, oprac. R. Pollak, t. 1, Warszawa 1961 (obowiązują: księgi 1-2).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>M. SĘP-SZARZYŃSKI: Rytmy abo Wiersze polskie oraz cykl erotyków</strong><br>
-                                <small>oprac. J. Krzyżanowski, wyd. 2 zmien., BN I 118; lub: Poezje, oprac. J. S. Gruchała, Kraków 1997, BP.</small>
+                                <strong>M. SĘP-SZARZYŃSKI: Rytmy…</strong>
                             </div>
                         </div>
                         <h5>LITERATURA OBCA</h5>
                         <div class="reading-list-item">
                             <div>
-                                <strong>F. PETRARKA: Sonety do Laury</strong><br>
-                                <small>przeł. J. Kurek, wstęp M. Brahmer; lub w: Pisma, oprac. K. Morawski, BN II 206; lub: przeł. A. Kuciak.</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>G. BOCCACCIO: Dekameron</strong><br>
-                                <small>przeł. E. Boyé (obowiązują: Sokół; Gryzelda).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>ERAZM z ROTTERDAMU: Wybór pism</strong><br>
-                                <small>przeł. M. Cytowska, E. Jędrkiewicz, M. Mejor, oprac. M. Cytowska, BN II 231 (obowiązują: Pochwała Głupoty; Skarga pokoju).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>F. RABELAIS: Gargantua i Pantagruel</strong><br>
-                                <small>przeł. T. Boy-Żeleński (wybór).</small>
+                                <strong>Petrarka, Boccaccio, Erazm, Rabelais…</strong>
                             </div>
                         </div>
                         <h4>PODRĘCZNIK</h4>
                         <div class="reading-list-item">
                             <div>
-                                <strong>J. ZIOMEK: Literatura Odrodzenia</strong><br>
-                                <small>Warszawa 1987 i wyd. nast.</small>
+                                <strong>J. ZIOMEK: Literatura Odrodzenia</strong>
                             </div>
                         </div>
                     </div>
@@ -324,94 +384,19 @@
                         <h5>LITERATURA POLSKA</h5>
                         <div class="reading-list-item">
                             <div>
-                                <strong>POECI POLSKIEGO BAROKU</strong><br>
-                                <small>oprac. J. Sokołowska, K. Żurowska, t. 1-2, Warszawa 1965; lub:</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>I W ODMIANACH CZASU SMAK JEST. ANTOLOGIA POLSKIEJ POEZJI EPOKI BAROKU</strong><br>
-                                <small>oprac. J. Sokołowska, Warszawa 1991 (obowiązują utwory: S. Grabowieckiego, H. Morsztyna, D. Naborowskiego, S. Zimorowica, M. K. Sarbiewskiego, S. Twardowskiego, K. Opalińskiego, S. H. Lubomirskiego, J. Baki).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>STAROPOLSKA POEZJA ZIEMIAŃSKA. ANTOLOGIA</strong><br>
-                                <small>oprac. J. S. Gruchała, S. Grzeszczuk, Warszawa 1988 (obowiązują utwory: S. F. Klonowica, A. Zbylitowskiego, D. Naborowskiego, H. Morsztyna, S. Twardowskiego, J. Gawińskiego).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>„WYSOKI UMYSŁ W DOLNYCH RZECZACH ZAWIKŁANY". ANTOLOGIA POLSKIEJ POEZJI METAFIZYCZNEJ EPOKI BAROKU</strong><br>
-                                <small>oprac. K. Mrowcewicz, Warszawa 1993 (obowiązują utwory: K. Miaskowskiego, Z. Morsztyna, S. H. Lubomirskiego).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>ANTOLOGIA LITERATURY SOWIZDRZALSKIEJ XVI I XVII WIEKU</strong><br>
-                                <small>oprac. S. Grzeszczuk, wyd. 2 zmien., BN I 186 (obowiązują: Wyprawa plebańska; Peregrynacja Maćkowa).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>P. SKARGA: Kazania sejmowe</strong><br>
-                                <small>oprac. J. Tazbir, BN I 70 (obowiązują dwa wybrane kazania).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>S. SZYMONOWIC: Sielanki i pozostałe wiersze polskie</strong><br>
-                                <small>oprac. J. Pelc, wyd. 2 zmien., BN I 82 (obowiązują: Dafnis; Żeńcy; Czary).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>W. POTOCKI: Wiersze wybrane</strong><br>
-                                <small>oprac. S. Grzeszczuk, wstęp J. S. Gruchała, BN I 19.</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>J. A. MORSZTYN: Wybór poezji</strong><br>
-                                <small>oprac. W. Weintraub, BN I 257.</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>W. KOCHOWSKI: Utwory poetyckie</strong><br>
-                                <small>oprac. M. Eustachiewicz, BN I 92 (obowiązują: psalmy 1, 2, 7, 9, 26, 27, 33, 36 z Psalmodii polskiej).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>J. Ch. PASEK: Pamiętniki</strong><br>
-                                <small>oprac. R. Pollak, Warszawa 1955 i wyd. nast.; lub: oprac. W. Czapliński, BN I 62 (obowiązują: lata 1656-1662).</small>
+                                <strong>Antologie i poeci polskiego baroku</strong>
                             </div>
                         </div>
                         <h5>LITERATURA OBCA</h5>
                         <div class="reading-list-item">
                             <div>
-                                <strong>T. TASSO: Gofred abo Jeruzalem wyzwolona</strong><br>
-                                <small>przeł. P. Kochanowski, oprac. R. Pollak, BN II 4 (wybór).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>P. CORNEILLE: Cyd</strong><br>
-                                <small>przeł. J. A. Morsztyn, Warszawa 1954 (wyd. synoptyczne); lub w: J. A. Morsztyn: Utwory zebrane, oprac. L. Kukulski, Warszawa 1971; lub: P. Corneille, J. A. Morsztyn: Cyd, oprac. A. Karpiński, A. Stetnowski, Warszawa 1999.</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>MOLIER: Wybór komedii</strong><br>
-                                <small>przeł. B. Korzeniewski, oprac. J. Pawłowiczowa, BN II 248; lub: Skąpiec, przeł. i oprac. T. Boy-Żeleński, BN II 6; lub: Świętoszek, przeł. idem, BN II 40; lub: Mizantrop, przeł. idem, BN II 2; lub: Mieszczanin szlachcicem, przeł. idem, BN II 10 (obowiązuje jedna wybrana komedia).</small>
+                                <strong>T. Tasso, Corneille, Molier (wybór)</strong>
                             </div>
                         </div>
                         <h4>PODRĘCZNIK</h4>
                         <div class="reading-list-item">
                             <div>
-                                <strong>C. HERNAS: Literatura baroku</strong><br>
-                                <small>Warszawa 1987 i wyd. nast.</small>
+                                <strong>C. HERNAS: Literatura baroku</strong>
                             </div>
                         </div>
                     </div>
@@ -431,119 +416,31 @@
                         <h5>LITERATURA POLSKA</h5>
                         <div class="reading-list-item">
                             <div>
-                                <strong>„ŚWIAT POPRAWIAĆ – ZUCHWAŁE RZEMIOSŁO". ANTOLOGIA POEZJI POLSKIEGO OŚWIECENIA</strong><br>
-                                <small>oprac. T. Kostkiewiczowa, Z. Goliński, Warszawa 1981 i wyd. nast. (obowiązują wiersze anonimowe z okresu konfederacji barskiej oraz utwory: E. Drużbackiej, A. Naruszewicza, I. Krasickiego, S. Trembeckiego, J. Szymanowskiego, K. Benisławskiej, F. Karpińskiego, F. D. Kniaźnina, K. Węgierskiego, J. Jasińskiego).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>MIĘDZY ROZPACZĄ I NADZIEJĄ. ANTOLOGIA POEZJI POROZBIOROWEJ LAT 1793-1806</strong><br>
-                                <small>wstęp P. Żbikowski, oprac. M. Nalepa, Kraków 2006 (obowiązują utwory: A. J. Czartoryskiego, C. Godebskiego, F. Karpińskiego, K. Koźmiana, S. Trembeckiego, J. P. Woronicza).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>I. KRASICKI: Monachomachia. Antymonachomachia</strong><br>
-                                <small>oprac. Z. Goliński, BN I 197.</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>I. KRASICKI: Satyry i listy</strong><br>
-                                <small>oprac. Z. Goliński, wstęp J. T. Pokrzywniak, wyd. 2 zmien., BN I 169 (obowiązują: Do króla; Świat zepsuty; Pijaństwo; Życie dworskie; Palinodia; Pochwała wieku; Człowiek i zwierz; Mędrek; Podróż; listy O obowiązkach obywatela; Do księdza A. Naruszewicza).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>I. KRASICKI: Bajki</strong><br>
-                                <small>oprac. Z. Goliński, BN I 220 (wybór).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>I. KRASICKI: Mikołaja Doświadczyńskiego przypadki</strong><br>
-                                <small>oprac. M. Klimowicz, BN I 41.</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>„MONITOR" 1765-1785</strong><br>
-                                <small>oprac. E. Aleksandrowska, BN I 226 (wybór artykułów).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>OŚWIECENI O LITERATURZE</strong><br>
-                                <small>oprac. T. Kostkiewiczowa, Z. Goliński, t. 1, Warszawa 1993 (obowiązują: Listy o guście J. Szymanowskiego, wybór fragmentów z O wymowie w prozie albo wierszu F. Karpińskiego oraz Sztuka rymotwórcza F. K. Dmochowskiego); t. 2, Warszawa 1995 (obowiązują: O pismach klasycznych i romantycznych J. Śniadeckiego oraz oba teksty E. Słowackiego).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>F. ZABŁOCKI: Fircyk w zalotach</strong><br>
-                                <small>oprac. J. Pawłowiczowa, BN I 176.</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>W. BOGUSŁAWSKI: Cud albo Krakowiaki i Górale</strong><br>
-                                <small>oprac. M. Klimowicz, BN I 162.</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>POLSKA TRAGEDIA NEOKLASYCYSTYCZNA</strong><br>
-                                <small>oprac. D. Ratajczakowa, BN I 260 (obowiązuje Barbara Radziwiłłówna A. Felińskiego).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>M. WIRTEMBERSKA: Malwina, czyli Domyślność serca</strong><br>
-                                <small>oprac. W. Billip, Warszawa 1958 i wyd. nast.</small>
+                                <strong>Antologie, Krasicki (Monachomachia, Satyry, Bajki…)</strong>
                             </div>
                         </div>
                         <h5>LITERATURA OBCA</h5>
                         <div class="reading-list-item">
                             <div>
-                                <strong>L. STERNE: Podróż sentymentalna</strong><br>
-                                <small>przeł. A. Ginczanka, oprac. Z. Sinkowa, BN II 174; lub: Życie i myśli J. W. Pana Tristrama Shandy, tłum. K. Tarnowska, oprac. W. Chwalewik, Warszawa 1974 i wyd. nast.</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>D. DIDEROT: Kubuś Fatalista i jego pan</strong><br>
-                                <small>przeł. T. Boy-Żeleński, weryfikacja przekł. i komentarz E. Skibińska-Cieńska, M. Cieński, wstęp M. Cieński, BN II 243.</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>VOLTAIRE: Powiastki filozoficzne</strong><br>
-                                <small>przeł. T. Boy-Żeleński (obowiązują: Zadig, Kandyd).</small>
-                            </div>
-                        </div>
-                        <div class="reading-list-item">
-                            <div>
-                                <strong>J. J. ROUSSEAU: Nowa Heloiza</strong><br>
-                                <small>przeł. i oprac. E. Rzadkowska, BN II 136 (wybór).</small>
+                                <strong>Sterne, Diderot, Voltaire, Rousseau (wybór)</strong>
                             </div>
                         </div>
                         <h4>PODRĘCZNIKI</h4>
                         <div class="reading-list-item">
                             <div>
-                                <strong>M. KLIMOWICZ: Literatura Oświecenia</strong><br>
-                                <small>Warszawa 1988 i wyd. nast.</small>
+                                <strong>M. KLIMOWICZ: Literatura Oświecenia</strong>
                             </div>
                         </div>
                         <div class="reading-list-item">
                             <div>
-                                <strong>R. PRZYBYLSKI: Klasycyzm, czyli Prawdziwy koniec Królestwa Polskiego</strong><br>
-                                <small>Warszawa 1983 i wyd. nast. (obowiązuje cz. 2: Prawdziwy koniec Królestwa Polskiego).</small>
+                                <strong>R. PRZYBYLSKI: Klasycyzm… (cz. 2)</strong>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </div> <!-- /accordion -->
+    </div> <!-- /reading-list-section -->
 
     <!-- Schedule Generator Section -->
     <div id="plan-generator-section" class="content-section d-none">
@@ -565,7 +462,6 @@
         </div>
         <hr class="my-4 border-secondary">
         <div id="all-possible-plans-display" class="d-flex flex-column gap-4">
-            <!-- Generated plans will be rendered here -->
             <p class="text-center text-secondary">Wyniki pojawią się tutaj.</p>
         </div>
     </div>
@@ -573,7 +469,5 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-<!-- Własny kod JavaScript -->
-<script src="script.js"></script>
 </body>
 </html>
